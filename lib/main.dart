@@ -4,6 +4,7 @@ import 'package:park_in_web/components/theme/transition.dart';
 import 'package:park_in_web/screens/report_main.dart';
 import 'package:park_in_web/screens/sign_in_main.dart';
 import 'package:park_in_web/screens/tickets_main.dart';
+import 'package:park_in_web/screens/view_main.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         '/sign-in': (context) => const SignInMain(),
         '/reports': (context) => const ReportMain(),
         '/tickets-issued': (context) => const TicketsMain(),
+        '/view': (context) => const ViewMain(),
       },
     );
   }
