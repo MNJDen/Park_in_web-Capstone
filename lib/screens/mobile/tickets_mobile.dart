@@ -146,7 +146,7 @@ class _TicketsMobileScreenState extends State<TicketsMobileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "Tickets Issued Desktop",
+                        "Tickets Issued Mobile",
                         style: TextStyle(
                           color: blackColor,
                           fontSize: 20,
