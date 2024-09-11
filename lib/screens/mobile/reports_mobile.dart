@@ -146,7 +146,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "Reports Desktop",
+                        "Reports Mobile",
                         style: TextStyle(
                           color: blackColor,
                           fontSize: 20,
