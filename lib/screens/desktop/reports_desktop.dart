@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
@@ -10,6 +12,39 @@ class ReportsDesktopScreen extends StatefulWidget {
 }
 
 class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
+  // Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // List to hold fetched reports
+  List<Map<String, dynamic>> reports = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchReports(); // Fetch data when the screen is initialized
+  }
+
+  // Fetch reports from Firestore
+  Future<void> _fetchReports() async {
+    QuerySnapshot snapshot =
+        await _firestore.collection('Incident Report').get();
+    setState(() {
+      reports = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+
+      // Sorting tickets
+      reports.sort((a, b) {
+        DateTime dateA = (a['timestamp'] as Timestamp).toDate();
+        DateTime dateB = (b['timestamp'] as Timestamp).toDate();
+        return dateA.compareTo(dateB); // Sort in ascending order
+      });
+
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,9 +52,7 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
       body: Column(
         children: [
           const NavbarDesktop(),
-          const SizedBox(
-            height: 28,
-          ),
+          const SizedBox(height: 28),
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(30),
@@ -37,48 +70,112 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                   ),
                 ],
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Reports Desktop",
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : PaginatedDataTable(
+                      header: const Text(
+                        "Incident Reports",
                         style: TextStyle(
-                          color: blackColor,
+                          fontWeight: FontWeight.bold,
                           fontSize: 20,
-                          fontWeight: FontWeight.w500,
+                          color: blackColor,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          _modal(context);
-                        },
-                        child: const Text(
-                          "Modal",
-                          style: TextStyle(
-                            color: blueColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
+                      columns: const [
+                        DataColumn(label: Text("Report ID")),
+                        DataColumn(label: Text("Reported By")),
+                        DataColumn(label: Text("Report Description")),
+                        DataColumn(label: Text("Date")),
+                      ],
+                      source: ReportDataSource(reports, context),
+                      rowsPerPage: 5,
+                    ),
             ),
           ),
-          const SizedBox(
-            height: 28,
-          ),
+          const SizedBox(height: 28),
         ],
       ),
     );
   }
+}
 
-  void _modal(BuildContext context) {
+// DataTable source class to display data in the table
+class ReportDataSource extends DataTableSource {
+  final List<Map<String, dynamic>> reports;
+  final BuildContext context;
+
+  ReportDataSource(this.reports, this.context);
+
+  @override
+  DataRow getRow(int index) {
+    final report = reports[index];
+    final reporterName = report['reporterName'] ?? 'Anonymous';
+    final reportDescription = report['reportDescription'] ?? '';
+    final timestamp =
+        (report['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final imageUrl = report['image_url'] ?? '';
+
+    final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
+    final formattedTime = DateFormat('hh:mm a').format(timestamp);
+    final formattedDateTime = '$formattedDate at $formattedTime';
+
+    return DataRow(cells: [
+      DataCell(Text('${index + 1}')),
+      // DataCell(Text(reporterName)),
+      DataCell(
+        GestureDetector(
+          onTap: () {
+            _modal(context, reporterName, reportDescription, formattedDateTime,
+                imageUrl);
+          },
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 250),
+            child: Text(
+              reporterName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
+      DataCell(
+        GestureDetector(
+          onTap: () {
+            _modal(context, reporterName, reportDescription, formattedDateTime,
+                imageUrl);
+          },
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 250),
+            child: Text(
+              reportDescription,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
+      // DataCell(Text(formattedDateTime)),
+      DataCell(
+        GestureDetector(
+          onTap: () {
+            _modal(context, reporterName, reportDescription, formattedDateTime,
+                imageUrl);
+          },
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 250),
+            child: Text(
+              formattedDateTime,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
+    ]);
+  }
+
+  void _modal(BuildContext context, String reporterName, String description,
+      String timestamp, String attachmentUrls) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -111,38 +208,35 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Wrap(
-                      children: [
-                        Text(
-                          'Reported By: ',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        Text(
-                          'Anonymous',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Reported By: ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
                     ),
                     Text(
-                      '6/28/2024',
+                      reporterName,
                       style: TextStyle(
-                        color: Colors.grey,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      timestamp,
+                      style: TextStyle(
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vitae volutpat arcu. Duis volutpat eros nulla, eu volutpat ex tincidunt at. Pellentesque ultricies, nisl nec imperdiet lacinia, massa nibh dictum magna, et dictum elit purus sit amet est.',
+                Text(
+                  description,
                   style: TextStyle(
                     color: Colors.black,
                   ),
@@ -156,36 +250,29 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 160,
-                      width: 215,
-                      decoration: BoxDecoration(
-                        color: blueColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                if (attachmentUrls.isNotEmpty)
+                  Container(
+                    height: 160,
+                    width: 215,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.5),
                       ),
                     ),
-                    Container(
-                      height: 160,
-                      width: 215,
-                      decoration: BoxDecoration(
-                        color: blueColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        attachmentUrls,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    Container(
-                      height: 160,
-                      width: 215,
-                      decoration: BoxDecoration(
-                        color: blueColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ],
-                ),
+                  )
+                else
+                  Text(
+                    'No attachment available.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
               ],
             ),
           ),
@@ -207,4 +294,13 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
       },
     );
   }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => reports.length;
+
+  @override
+  int get selectedRowCount => 0;
 }
