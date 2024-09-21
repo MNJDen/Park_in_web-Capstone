@@ -31,7 +31,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
       setState(() {
         tickets = snapshot.docs.map((doc) {
           Map<String, dynamic> ticketData = doc.data() as Map<String, dynamic>;
-          ticketData['docID'] = doc.id; // Add docID to the ticket data
+          ticketData['docID'] = doc.id;
           return ticketData;
         }).toList();
 
