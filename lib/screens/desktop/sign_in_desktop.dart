@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:park_in_web/components/fields/form_field.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/ui/primary_btn.dart';
+import 'package:park_in_web/screens/report_main.dart';
+import 'package:park_in_web/services/Auth/Auth_Service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInDesktopScreen extends StatefulWidget {
   const SignInDesktopScreen({super.key});
@@ -13,6 +16,110 @@ class SignInDesktopScreen extends StatefulWidget {
 class _SignInDesktopScreenState extends State<SignInDesktopScreen> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passwordCtrl = TextEditingController();
+
+  void login(BuildContext context) async {
+    final authService = AuthService();
+    try {
+      await authService.signInWithEmailPassword(
+        _emailCtrl.text,
+        _passwordCtrl.text,
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userType', 'Admin'); // Store user type
+      await prefs.setBool('isLoggedIn', true); // Store login status
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          width: MediaQuery.of(context).size.width * 0.95,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color.fromRGBO(217, 255, 214, 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: const BorderSide(
+              color: Color.fromRGBO(20, 255, 0, 1),
+            ),
+          ),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle_rounded,
+                color: const Color.fromRGBO(20, 255, 0, 1),
+                size: 20,
+              ),
+              SizedBox(
+                width: 8,
+              ),
+              Flexible(
+                child: Text(
+                  'Sign In Successful!', // Use the cleaned error message here
+                  style: TextStyle(
+                    color: blackColor,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ReportMain()),
+      );
+    } catch (e) {
+      if (mounted) {
+        String errorMessage;
+        if (e is AuthServiceException) {
+          errorMessage = e.message;
+        } else {
+          errorMessage = 'An unknown error occurred';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            width: MediaQuery.of(context).size.width * 0.95,
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color.fromARGB(255, 255, 235, 235),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(
+                color: Color.fromRGBO(255, 0, 0, 1),
+              ),
+            ),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_rounded,
+                  color: const Color.fromRGBO(255, 0, 0, 1),
+                  size: 20,
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                Flexible(
+                  child: Text(
+                    errorMessage, // Use the cleaned error message here
+                    style: TextStyle(
+                      color: blackColor,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,14 +205,17 @@ class _SignInDesktopScreenState extends State<SignInDesktopScreen> {
                             ),
                             PRKFormField(
                               prefixIcon: Icons.password_rounded,
+                              suffixIcon: Icons.visibility_off_rounded,
                               labelText: "Password",
                               controller: _passwordCtrl,
+                              obscureText: true,
                             ),
                             const Spacer(),
                             PRKPrimaryBtn(
                               label: "Sign In",
                               onPressed: () {
-                                Navigator.pushNamed(context, '/reports');
+                                login(context);
+                                // Navigator.pushNamed(context, '/reports');
                               },
                             ),
                           ],
