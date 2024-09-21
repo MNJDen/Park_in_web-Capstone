@@ -85,30 +85,15 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
               onPressed: () async {
                 try {
                   await authService.signOut();
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear();
 
-                  Navigator.pushAndRemoveUntil(
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('isLoggedIn', false);
+                  await prefs.remove('userType');
+
+                  // Navigate to SignInMain and update URL
+                  Navigator.pushNamedAndRemoveUntil(
                     context,
-                    PageRouteBuilder(
-                      pageBuilder: (BuildContext context,
-                          Animation<double> animation1,
-                          Animation<double> animation2) {
-                        return SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(1, 0),
-                            end: Offset.zero,
-                          ).animate(
-                              CurveTween(curve: Curves.fastEaseInToSlowEaseOut)
-                                  .animate(animation1)),
-                          child: const Material(
-                            elevation: 5,
-                            child: SignInMain(),
-                          ),
-                        );
-                      },
-                      transitionDuration: const Duration(milliseconds: 400),
-                    ),
+                    '/sign-in',
                     (Route<dynamic> route) => false,
                   );
                 } finally {
