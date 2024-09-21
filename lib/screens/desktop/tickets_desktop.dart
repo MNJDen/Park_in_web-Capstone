@@ -22,26 +22,28 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchReports(); // Fetch data when the screen is initialized
+    _listenForTicketUpdates(); // Fetch data when the screen is initialized
   }
 
   // Fetch reports from Firestore
-  Future<void> _fetchReports() async {
-    QuerySnapshot snapshot =
-        await _firestore.collection('Violation Ticket').get();
-    setState(() {
-      tickets = snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+  void _listenForTicketUpdates() {
+    _firestore.collection('Violation Ticket').snapshots().listen((snapshot) {
+      setState(() {
+        tickets = snapshot.docs.map((doc) {
+          Map<String, dynamic> ticketData = doc.data() as Map<String, dynamic>;
+          ticketData['docID'] = doc.id; // Add docID to the ticket data
+          return ticketData;
+        }).toList();
 
-      // Sorting tickets
-      tickets.sort((a, b) {
-        DateTime dateA = (a['timestamp'] as Timestamp).toDate();
-        DateTime dateB = (b['timestamp'] as Timestamp).toDate();
-        return dateA.compareTo(dateB); // Sort in ascending order
+        // Sorting tickets by timestamp
+        tickets.sort((a, b) {
+          DateTime dateA = (a['timestamp'] as Timestamp).toDate();
+          DateTime dateB = (b['timestamp'] as Timestamp).toDate();
+          return dateA.compareTo(dateB); // Sort in ascending order
+        });
+
+        _isLoading = false;
       });
-
-      _isLoading = false;
     });
   }
 
@@ -115,6 +117,7 @@ class ReportDataSource extends DataTableSource {
   @override
   DataRow getRow(int index) {
     final ticket = tickets[index];
+    final docID = ticket['docID'] ?? '';
     final ticketedTo = ticket['plate_number'] ?? '';
     final vehicleType = ticket['vehicle_type'] ?? '';
     final violation = ticket['violation'] ?? '';
@@ -143,6 +146,7 @@ class ReportDataSource extends DataTableSource {
         if (selected ?? false) {
           _modal(
             context,
+            docID,
             ticketedTo,
             vehicleType,
             violation,
@@ -169,14 +173,35 @@ class ReportDataSource extends DataTableSource {
 
 void _modal(
     BuildContext context,
-    String ticketedTo,
+    String docID,
+    String plateNo,
     String vehicleType,
     String violation,
     String status,
     String timestamp,
     String attachmentUrl1,
     String attachmentUrl2,
-    String attachmentUrl3) {
+    String attachmentUrl3) async {
+  // query userNumber and mobileNo based on plateNo from Firestore
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String userNumber = 'Not available';
+  String mobileNo = 'Not available';
+
+  try {
+    QuerySnapshot userSnapshot = await _firestore
+        .collection('User')
+        .where('plateNo', arrayContains: plateNo)
+        .get();
+
+    if (userSnapshot.docs.isNotEmpty) {
+      var userData = userSnapshot.docs.first.data() as Map<String, dynamic>;
+      userNumber = userData['userNumber'] ?? 'Not available';
+      mobileNo = userData['mobileNo'] ?? 'Not available';
+    }
+  } catch (e) {
+    print('Error fetching user details: $e');
+  }
+
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -221,15 +246,15 @@ void _modal(
                         ),
                       ),
                       Text(
-                        ticketedTo,
+                        plateNo,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
                           color: Colors.black,
                         ),
                       ),
-                      const Text(
-                        '(202100220)',
-                        style: TextStyle(
+                      Text(
+                        '($userNumber)',
+                        style: const TextStyle(
                           fontWeight: FontWeight.normal,
                           color: Colors.black,
                         ),
@@ -249,10 +274,10 @@ void _modal(
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Wrap(
+                  Wrap(
                     spacing: 4,
                     children: [
-                      Text(
+                      const Text(
                         'Phone Number: ',
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
@@ -260,8 +285,8 @@ void _modal(
                         ),
                       ),
                       Text(
-                        '09216459784',
-                        style: TextStyle(
+                        mobileNo,
+                        style: const TextStyle(
                           fontWeight: FontWeight.normal,
                           color: Colors.black,
                         ),
@@ -345,42 +370,38 @@ void _modal(
                         ),
                       ),
                     ),
-                  Container(
-                    height: MediaQuery.of(context).size.height * 0.2,
-                    width: MediaQuery.of(context).size.width * 0.095,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        attachmentUrl2,
-                        fit: BoxFit.cover,
+                  if (attachmentUrl2.isNotEmpty)
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      width: MediaQuery.of(context).size.width * 0.095,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          attachmentUrl2,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    height: MediaQuery.of(context).size.height * 0.2,
-                    width: MediaQuery.of(context).size.width * 0.095,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        attachmentUrl3,
-                        fit: BoxFit.cover,
+                  if (attachmentUrl3.isNotEmpty)
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      width: MediaQuery.of(context).size.width * 0.095,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          attachmentUrl3,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
-
-              // else
-              //   Text(
-              //     'No attachment available.',
-              //     style: TextStyle(color: Colors.grey),
-              //   ),
             ],
           ),
         ),
@@ -399,14 +420,23 @@ void _modal(
           ),
           TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: blueColor,
+              backgroundColor: status == 'Resolved' ? Colors.grey : blueColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+            onPressed: status == 'Resolved'
+                ? null
+                : () async {
+                    await _firestore
+                        .collection('Violation Ticket')
+                        .doc(docID)
+                        .update({
+                      'status': 'Resolved',
+                    });
+
+                    Navigator.of(context).pop();
+                  },
             child: const Text(
               "Resolve",
               style: TextStyle(
