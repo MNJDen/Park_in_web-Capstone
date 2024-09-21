@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:park_in_web/components/fields/form_field.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/ui/primary_btn.dart';
-import 'package:park_in_web/screens/report_main.dart';
+// import 'package:park_in_web/screens/report_main.dart';
 import 'package:park_in_web/services/Auth/Auth_Service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,9 +67,10 @@ class _SignInDesktopScreenState extends State<SignInDesktopScreen> {
         ),
       );
 
-      Navigator.pushReplacement(
+      Navigator.pushNamedAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => ReportMain()),
+        '/reports',
+        (Route<dynamic> route) => false,
       );
     } catch (e) {
       if (mounted) {
