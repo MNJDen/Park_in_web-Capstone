@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/theme/transition.dart';
@@ -5,8 +6,16 @@ import 'package:park_in_web/screens/report_main.dart';
 import 'package:park_in_web/screens/sign_in_main.dart';
 import 'package:park_in_web/screens/tickets_main.dart';
 import 'package:park_in_web/screens/view_main.dart';
+import 'package:park_in_web/services/Auth/Auth_Gate.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyCVQc1KGS6rxgznVo7A_M-V0-JwoE0u4aU",
+          projectId: "park-in-capstone",
+          messagingSenderId: "66482745641",
+          appId: "1:66482745641:web:e3562dae74becc1b504738"));
   runApp(const MyApp());
 }
 
@@ -32,13 +41,29 @@ class MyApp extends StatelessWidget {
       ).copyWith(
         colorScheme: ThemeData().colorScheme.copyWith(primary: blueColor),
       ),
-      initialRoute: '/sign-in',
+      home: const RootPage(),
       routes: {
         '/sign-in': (context) => const SignInMain(),
         '/reports': (context) => const ReportMain(),
         '/tickets-issued': (context) => const TicketsMain(),
         '/view': (context) => const ViewMain(),
       },
+    );
+  }
+}
+
+class RootPage extends StatefulWidget {
+  const RootPage({super.key});
+
+  @override
+  State<RootPage> createState() => _RootPageState();
+}
+
+class _RootPageState extends State<RootPage> {
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: AuthGate(),
     );
   }
 }
