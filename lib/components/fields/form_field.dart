@@ -63,7 +63,7 @@ class _PRKFormFieldState extends State<PRKFormField> {
       focusNode: _focusNode,
       obscureText: _obscureText,
       keyboardType: widget.keyboardType,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 12,
         color: blackColor,
       ),
@@ -90,14 +90,14 @@ class _PRKFormFieldState extends State<PRKFormField> {
             : null,
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             width: 1,
             color: blueColor,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             width: 0.5,
             color: borderBlack,
           ),
