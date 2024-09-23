@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
@@ -14,6 +15,7 @@ class ReportsDesktopScreen extends StatefulWidget {
 class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> reports = [];
+  final TextEditingController _searchCtrl = TextEditingController();
   bool _isLoading = true;
 
   @override
@@ -86,6 +88,16 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                     color: blackColor,
                   ),
                 ),
+                actions: [
+                  SizedBox(
+                    height: 40,
+                    width: 170,
+                    child: PRKSearchField(
+                        hintText: "Search",
+                        suffixIcon: Icons.search_rounded,
+                        controller: _searchCtrl),
+                  ),
+                ],
                 columns: const [
                   DataColumn(label: Text("Report ID")),
                   DataColumn(label: Text("Reported By")),
@@ -95,6 +107,7 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                 source: ReportDataSource(reports, context),
                 rowsPerPage: 11,
                 showCheckboxColumn: false,
+                arrowHeadColor: blueColor,
               ),
             ),
           ),
