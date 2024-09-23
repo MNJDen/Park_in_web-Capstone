@@ -50,25 +50,22 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
             width: MediaQuery.of(context).size.width * 0.9,
             // height: MediaQuery.of(context).size.height * 0.8,
             margin: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * 0.1),
-            // decoration: BoxDecoration(
-            //   borderRadius: BorderRadius.circular(10),
-            //   boxShadow: [
-            //     BoxShadow(
-            //       color: Colors.black.withOpacity(0.1),
-            //       blurRadius: 8,
-            //       offset: const Offset(0, 4),
-            //     ),
-            //   ],
-            // ),
+              horizontal: MediaQuery.of(context).size.width * 0.1,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: blackColor.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Theme(
               data: Theme.of(context).copyWith(
                 dataTableTheme: DataTableThemeData(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: whiteColor,
-                  ),
-                  dividerThickness: 0.3,
+                  dividerThickness: 0.2,
                   headingRowColor:
                       WidgetStateColor.resolveWith((states) => whiteColor),
                   dataRowColor:
@@ -145,6 +142,15 @@ class ReportDataSource extends DataTableSource {
           );
         }
       },
+      color: WidgetStateProperty.resolveWith(
+        (states) {
+          if (states.contains(WidgetState.hovered)) {
+            return blackColor.withOpacity(0.05);
+          } else {
+            return Colors.transparent;
+          }
+        },
+      ),
     );
   }
 
