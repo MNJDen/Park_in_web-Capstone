@@ -61,15 +61,22 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
             width: MediaQuery.of(context).size.width * 0.9,
             // height: MediaQuery.of(context).size.height * 0.8,
             margin: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * 0.1),
+              horizontal: MediaQuery.of(context).size.width * 0.1,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: blackColor.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Theme(
               data: Theme.of(context).copyWith(
                 dataTableTheme: DataTableThemeData(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: whiteColor,
-                  ),
-                  dividerThickness: 0.3,
+                  dividerThickness: 0.2,
                   headingRowColor:
                       WidgetStateColor.resolveWith((states) => whiteColor),
                   dataRowColor:
@@ -158,6 +165,15 @@ class ReportDataSource extends DataTableSource {
           );
         }
       },
+      color: WidgetStateProperty.resolveWith(
+        (states) {
+          if (states.contains(WidgetState.hovered)) {
+            return blackColor.withOpacity(0.05);
+          } else {
+            return Colors.transparent;
+          }
+        },
+      ),
     );
   }
 
@@ -361,6 +377,10 @@ void _modal(
                       width: MediaQuery.of(context).size.width * 0.095,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: blackColor.withOpacity(0.15),
+                          width: 0.5,
+                        ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -376,6 +396,10 @@ void _modal(
                       width: MediaQuery.of(context).size.width * 0.095,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: blackColor.withOpacity(0.15),
+                          width: 0.5,
+                        ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -391,6 +415,10 @@ void _modal(
                       width: MediaQuery.of(context).size.width * 0.095,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: blackColor.withOpacity(0.15),
+                          width: 0.5,
+                        ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -420,25 +448,26 @@ void _modal(
           ),
           TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: status == 'Resolved' ? Colors.grey : blueColor,
+              backgroundColor: blueColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: status == 'Resolved'
-                ? null
-                : () async {
-                    await _firestore
-                        .collection('Violation Ticket')
-                        .doc(docID)
-                        .update({
-                      'status': 'Resolved',
-                    });
-
-                    Navigator.of(context).pop();
-                  },
-            child: const Text(
-              "Resolve",
+            onPressed: () async {
+              if (status == 'Resolved') {
+                _confirmRevertModal(
+                  context,
+                  docID,
+                );
+              } else {
+                _confirmResolveModal(
+                  context,
+                  docID,
+                );
+              }
+            },
+            child: Text(
+              status == 'Resolved' ? "Revert to Pending?" : "Resolve",
               style: TextStyle(
                 color: whiteColor,
                 fontWeight: FontWeight.w500,
@@ -449,4 +478,150 @@ void _modal(
       );
     },
   );
+}
+
+void _confirmResolveModal(BuildContext context, String docID) async {
+  bool confirmed = false;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: whiteColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        title: const Text(
+          "Confirm Changes",
+          style: TextStyle(
+            color: blackColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        content: const Text(
+          "Are you sure you want to resolve this ticket?",
+          style: TextStyle(
+            color: blackColor,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                color: blueColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: blueColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              confirmed = true;
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              "Confirm",
+              style: TextStyle(
+                color: whiteColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmed) {
+    await _firestore.collection('Violation Ticket').doc(docID).update(
+      {
+        'status': 'Resolved',
+      },
+    );
+    Navigator.of(context).pop();
+  }
+}
+
+void _confirmRevertModal(BuildContext context, String docID) async {
+  bool confirmed = false;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: whiteColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        title: const Text(
+          "Confirm Changes",
+          style: TextStyle(
+            color: blackColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        content: const Text(
+          "Are you sure you want to revert this ticket to pending?",
+          style: TextStyle(
+            color: blackColor,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                color: blueColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: blueColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              confirmed = true;
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              "Confirm",
+              style: TextStyle(
+                color: whiteColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmed) {
+    await _firestore.collection('Violation Ticket').doc(docID).update(
+      {
+        'status': 'Pending',
+      },
+    );
+    Navigator.of(context).pop();
+  }
 }
