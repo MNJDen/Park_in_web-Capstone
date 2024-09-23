@@ -122,7 +122,7 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: blackColor.withOpacity(0.05),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
