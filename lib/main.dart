@@ -28,6 +28,14 @@ class MyApp extends StatelessWidget {
       title: 'Park-in',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        cardTheme: CardTheme(
+          surfaceTintColor: whiteColor,
+          color: whiteColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
         pageTransitionsTheme: PageTransitionsTheme(
           builders: {
             TargetPlatform.iOS: NoTransitionPageBuilder(),
