@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ class TicketsDesktopScreen extends StatefulWidget {
 class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
   // Firestore instance
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController _searchCtrl = TextEditingController();
 
   // List to hold fetched tickets
   List<Map<String, dynamic>> tickets = [];
@@ -95,6 +97,16 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                     color: blackColor,
                   ),
                 ),
+                actions: [
+                  SizedBox(
+                    height: 40,
+                    width: 170,
+                    child: PRKSearchField(
+                        hintText: "Search",
+                        suffixIcon: Icons.search_rounded,
+                        controller: _searchCtrl),
+                  ),
+                ],
                 columns: const [
                   DataColumn(label: Text("Ticket ID")),
                   DataColumn(label: Text("Ticketed To")),
@@ -106,6 +118,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                 source: ReportDataSource(tickets, context),
                 rowsPerPage: 11,
                 showCheckboxColumn: false,
+                arrowHeadColor: blueColor,
               ),
             ),
           ),
