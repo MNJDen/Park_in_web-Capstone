@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
@@ -9,6 +10,46 @@ class ViewMobileScreen extends StatefulWidget {
 }
 
 class _ViewDesktopScreenState extends State<ViewMobileScreen> {
+  final DatabaseReference _dbRef =
+      FirebaseDatabase.instance.ref('parkingAreas');
+  int totalParkingCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToParkingUpdates();
+  }
+
+  // Listen to real-time updates from Firebase
+  void _listenToParkingUpdates() {
+    _dbRef.onValue.listen((DatabaseEvent event) {
+      DataSnapshot snapshot = event.snapshot;
+      int total = 0;
+
+      if (snapshot.exists) {
+        Map<String, dynamic> parkingAreas =
+            Map<String, dynamic>.from(snapshot.value as Map);
+        parkingAreas.forEach((key, value) {
+          num count = value['count'] ?? 0;
+          total += count.toInt();
+        });
+
+        if (mounted) {
+          setState(() {
+            totalParkingCount = total;
+          });
+        }
+      } else {
+        print('Snapshot does not exist');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +105,7 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                         ),
                       ],
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -79,7 +120,7 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                         ),
                         Center(
                           child: Text(
-                            "44",
+                            totalParkingCount.toString(),
                             style: TextStyle(
                               fontSize: 80,
                               fontWeight: FontWeight.bold,
@@ -92,7 +133,7 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                         Align(
                           alignment: Alignment.bottomRight,
                           child: Text(
-                            "Aprroximately",
+                            "Approximately",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
