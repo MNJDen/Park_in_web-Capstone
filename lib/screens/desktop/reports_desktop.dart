@@ -14,29 +14,107 @@ class ReportsDesktopScreen extends StatefulWidget {
 
 class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  List<Map<String, dynamic>> reports = [];
   final TextEditingController _searchCtrl = TextEditingController();
+
+  List<Map<String, dynamic>> reports = [];
+  List<Map<String, dynamic>> filteredReports = [];
   bool _isLoading = true;
+
+  // Tracking sorted column and sort order (ascending/descending)
+  int _sortColumnIndex = 0;
+  bool _isAscending = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchReports();
+    _listenForTicketUpdates();
+    _searchCtrl.addListener(_applySearchFilter);
   }
 
-  Future<void> _fetchReports() async {
-    QuerySnapshot snapshot =
-        await _firestore.collection('Incident Report').get();
-    setState(() {
-      reports = snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-      reports.sort((a, b) {
-        DateTime dateA = (a['timestamp'] as Timestamp).toDate();
-        DateTime dateB = (b['timestamp'] as Timestamp).toDate();
-        return dateA.compareTo(dateB);
+  @override
+  void dispose() {
+    _searchCtrl.removeListener(_applySearchFilter);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _listenForTicketUpdates() {
+    _firestore.collection('Incident Report').snapshots().listen((snapshot) {
+      setState(() {
+        reports = snapshot.docs.map((doc) {
+          Map<String, dynamic> reportData = doc.data() as Map<String, dynamic>;
+          reportData['docID'] = doc.id;
+          return reportData;
+        }).toList();
+
+        // Sorting tickets by timestamp
+        reports.sort((a, b) {
+          DateTime dateA = (a['timestamp'] as Timestamp).toDate();
+          DateTime dateB = (b['timestamp'] as Timestamp).toDate();
+          return dateB.compareTo(dateA); // Sort in ascending order
+        });
+
+        // Initialize filteredReports to display all tickets initially
+        filteredReports = List.from(reports);
+        _isLoading = false;
       });
-      _isLoading = false;
+    });
+  }
+
+  void _applySearchFilter() {
+    final query = _searchCtrl.text.toLowerCase();
+    final DateFormat dateFormatter = DateFormat('MM/dd/yyyy');
+
+    setState(() {
+      if (query.isEmpty) {
+        // If search field is empty, show all tickets
+        filteredReports = List.from(reports);
+      } else {
+        // Filter reports based on the search term
+        filteredReports = reports.where((report) {
+          final docID = report['docID']?.toString().toLowerCase() ?? '';
+          final reportedPlateNumber =
+              report['reportedPlateNumber']?.toString().toLowerCase() ?? '';
+          final reportDescription =
+              report['reportDescription']?.toString().toLowerCase() ?? '';
+          final reporterName =
+              report['reporterName']?.toString().toLowerCase() ?? '';
+          final timestamp = report['timestamp'] as Timestamp?;
+          String reportDate = '';
+          if (timestamp != null) {
+            reportDate = dateFormatter.format(timestamp.toDate()).toLowerCase();
+          }
+
+          // // Debugging print statements
+          // print('Searching for: $query');
+          // print('Plate Number: $ticketedTo');
+          // print('Vehicle Type: $vehicleType');
+          // print('Violation: $violation');
+
+          return docID.contains(query) ||
+              reportedPlateNumber.contains(query) ||
+              reportDescription.contains(query) ||
+              reporterName.contains(query) ||
+              reportDate.contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  // Sorting function for the columns
+  void _sort<T>(Comparable<T> Function(Map<String, dynamic> report) getField,
+      int columnIndex, bool ascending) {
+    setState(() {
+      _sortColumnIndex = columnIndex;
+      _isAscending = ascending;
+
+      filteredReports.sort((a, b) {
+        final fieldA = getField(a);
+        final fieldB = getField(b);
+        return ascending
+            ? Comparable.compare(fieldA, fieldB)
+            : Comparable.compare(fieldB, fieldA);
+      });
     });
   }
 
@@ -98,13 +176,40 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                         controller: _searchCtrl),
                   ),
                 ],
-                columns: const [
-                  DataColumn(label: Text("Report ID")),
-                  DataColumn(label: Text("Reported By")),
-                  DataColumn(label: Text("Report Description")),
-                  DataColumn(label: Text("Date")),
+                columns: [
+                  DataColumn(
+                    label: const Text("Report ID"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['docID'] ?? 0,
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: const Text("Reported By"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['reporterName']?.toString() ?? '',
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: const Text("Report Description"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) =>
+                            report['reportDescription']?.toString() ?? '',
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: const Text("Date"),
+                    onSort: (columnIndex, ascending) => _sort<DateTime>(
+                        (report) => (report['timestamp'] as Timestamp).toDate(),
+                        columnIndex,
+                        ascending),
+                  ),
                 ],
-                source: ReportDataSource(reports, context),
+                sortColumnIndex: _sortColumnIndex,
+                sortAscending: _isAscending,
+                source: ReportDataSource(filteredReports, context),
                 rowsPerPage: 11,
                 showCheckboxColumn: false,
                 arrowHeadColor: blueColor,
@@ -126,8 +231,10 @@ class ReportDataSource extends DataTableSource {
   @override
   DataRow getRow(int index) {
     final report = reports[index];
+    final docID = report['docID'] ?? 'NaN';
     final reporterName = report['reporterName'] ?? 'Anonymous';
     final reportDescription = report['reportDescription'] ?? '';
+    final reportedPlateNumber = report['reportedPlateNumber'] ?? '';
     final timestamp =
         (report['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
 
@@ -139,7 +246,8 @@ class ReportDataSource extends DataTableSource {
 
     return DataRow(
       cells: [
-        DataCell(Text('${index + 1}')),
+        // DataCell(Text('${index + 1}')),
+        DataCell(Text(docID)),
         DataCell(Text(reporterName)),
         DataCell(Text(reportDescription)),
         DataCell(Text(formattedDateTime)),
@@ -150,6 +258,7 @@ class ReportDataSource extends DataTableSource {
             context,
             reporterName,
             reportDescription,
+            reportedPlateNumber,
             formattedDateTime,
             imageUrl,
           );
@@ -178,7 +287,7 @@ class ReportDataSource extends DataTableSource {
 }
 
 void _modal(BuildContext context, String reporterName, String description,
-    String timestamp, String attachmentUrls) {
+    String reportedPlateNumber, String timestamp, String attachmentUrls) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -236,6 +345,26 @@ void _modal(BuildContext context, String reporterName, String description,
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
                       color: blackColor.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.start,
+                children: [
+                  const Text(
+                    "Reported Plate Number:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Text(
+                    reportedPlateNumber,
+                    style: const TextStyle(
+                      color: Colors.black,
                     ),
                   ),
                 ],
