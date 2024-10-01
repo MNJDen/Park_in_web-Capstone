@@ -19,12 +19,25 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
 
   // List to hold fetched tickets
   List<Map<String, dynamic>> tickets = [];
+  List<Map<String, dynamic>> filteredTickets = [];
   bool _isLoading = true;
+
+  // Tracking sorted column and sort order (ascending/descending)
+  int _sortColumnIndex = 0;
+  bool _isAscending = true;
 
   @override
   void initState() {
     super.initState();
     _listenForTicketUpdates(); // Fetch data when the screen is initialized
+    _searchCtrl.addListener(_applySearchFilter);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.removeListener(_applySearchFilter);
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   // Fetch reports from Firestore
@@ -44,7 +57,66 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
           return dateA.compareTo(dateB); // Sort in ascending order
         });
 
+        // Initialize filteredTickets to display all tickets initially
+        filteredTickets = List.from(tickets);
         _isLoading = false;
+      });
+    });
+  }
+
+  void _applySearchFilter() {
+    final query = _searchCtrl.text.toLowerCase();
+    final DateFormat dateFormatter = DateFormat('MM/dd/yyyy');
+
+    setState(() {
+      if (query.isEmpty) {
+        // If search field is empty, show all tickets
+        filteredTickets = List.from(tickets);
+      } else {
+        // Filter tickets based on the search term
+        filteredTickets = tickets.where((ticket) {
+          final ticketedTo =
+              ticket['plate_number']?.toString().toLowerCase() ?? '';
+          final vehicleType =
+              ticket['vehicle_type']?.toString().toLowerCase() ?? '';
+          final violation = ticket['violation']?.toString().toLowerCase() ?? '';
+          final status =
+              ticket['status']?.toString().toLowerCase() ?? 'pending';
+          final timestamp = ticket['timestamp'] as Timestamp?;
+          String ticketDate = '';
+          if (timestamp != null) {
+            ticketDate = dateFormatter.format(timestamp.toDate()).toLowerCase();
+          }
+
+          // // Debugging print statements
+          // print('Searching for: $query');
+          // print('Plate Number: $ticketedTo');
+          // print('Vehicle Type: $vehicleType');
+          // print('Violation: $violation');
+
+          return ticketedTo.contains(query) ||
+              vehicleType.contains(query) ||
+              violation.contains(query) ||
+              status.contains(query) ||
+              ticketDate.contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  // Sorting function for the columns
+  void _sort<T>(Comparable<T> Function(Map<String, dynamic> report) getField,
+      int columnIndex, bool ascending) {
+    setState(() {
+      _sortColumnIndex = columnIndex;
+      _isAscending = ascending;
+
+      filteredTickets.sort((a, b) {
+        final fieldA = getField(a);
+        final fieldB = getField(b);
+        return ascending
+            ? Comparable.compare(fieldA, fieldB)
+            : Comparable.compare(fieldB, fieldA);
       });
     });
   }
@@ -107,15 +179,53 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                         controller: _searchCtrl),
                   ),
                 ],
-                columns: const [
-                  DataColumn(label: Text("Ticket ID")),
-                  DataColumn(label: Text("Ticketed To")),
-                  DataColumn(label: Text("Vehicle Type")),
-                  DataColumn(label: Text("Violation")),
-                  DataColumn(label: Text("Status")),
-                  DataColumn(label: Text("Date")),
+                columns: [
+                  DataColumn(
+                    label: Text("Ticket ID"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['docID'] ?? 0,
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: Text("Ticketed To"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['plate_number'] ?? 0,
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: Text("Vehicle Type"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['vehicle_type'] ?? 0,
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: Text("Violation"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['violation'] ?? 0,
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: Text("Status"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['status'] ?? 0,
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: Text("Date"),
+                    onSort: (columnIndex, ascending) => _sort<DateTime>(
+                        (report) => (report['timestamp'] as Timestamp).toDate(),
+                        columnIndex,
+                        ascending),
+                  ),
                 ],
-                source: ReportDataSource(tickets, context),
+                sortColumnIndex: _sortColumnIndex,
+                sortAscending: _isAscending,
+                source: ReportDataSource(filteredTickets, context),
                 rowsPerPage: 11,
                 showCheckboxColumn: false,
                 arrowHeadColor: blueColor,
@@ -141,6 +251,7 @@ class ReportDataSource extends DataTableSource {
     final ticketedTo = ticket['plate_number'] ?? '';
     final vehicleType = ticket['vehicle_type'] ?? '';
     final violation = ticket['violation'] ?? '';
+    final description = ticket['description'] ?? '';
     final status = ticket['status'] ?? 'Pending';
     final timestamp =
         (ticket['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
@@ -155,7 +266,8 @@ class ReportDataSource extends DataTableSource {
 
     return DataRow(
       cells: [
-        DataCell(Text('${index + 1}')),
+        // DataCell(Text('${index + 1}')),
+        DataCell(Text(docID)),
         DataCell(Text(ticketedTo)),
         DataCell(Text(vehicleType)),
         DataCell(Text(violation)),
@@ -170,6 +282,7 @@ class ReportDataSource extends DataTableSource {
             ticketedTo,
             vehicleType,
             violation,
+            description,
             status,
             formattedDateTime,
             imageUrl1,
@@ -206,6 +319,7 @@ void _modal(
     String plateNo,
     String vehicleType,
     String violation,
+    String description,
     String status,
     String timestamp,
     String attachmentUrl1,
@@ -345,6 +459,27 @@ void _modal(
                   ),
                   Text(
                     violation,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.normal,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.start,
+                children: [
+                  const Text(
+                    'Description: ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Text(
+                    description,
                     style: const TextStyle(
                       fontWeight: FontWeight.normal,
                       color: Colors.black,
