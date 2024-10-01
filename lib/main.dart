@@ -13,6 +13,8 @@ void main() async {
   await Firebase.initializeApp(
       options: const FirebaseOptions(
           apiKey: "AIzaSyCVQc1KGS6rxgznVo7A_M-V0-JwoE0u4aU",
+          databaseURL:
+              "https://park-in-capstone-default-rtdb.asia-southeast1.firebasedatabase.app",
           projectId: "park-in-capstone",
           messagingSenderId: "66482745641",
           appId: "1:66482745641:web:e3562dae74becc1b504738"));
