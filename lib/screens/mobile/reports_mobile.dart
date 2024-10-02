@@ -337,21 +337,22 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                 ),
                 child: PaginatedDataTable(
                   header: const Text(
-                    '',
-                    // style: TextStyle(
-                    //   fontWeight: FontWeight.bold,
-                    //   fontSize: 10,
-                    //   color: blackColor,
-                    // ),
+                    'Incident Reports',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: blackColor,
+                    ),
                   ),
                   actions: [
                     SizedBox(
                       height: 40,
-                      width: 170,
+                      width: 120,
                       child: PRKSearchField(
-                          hintText: "Search",
-                          suffixIcon: Icons.search_rounded,
-                          controller: _searchCtrl),
+                        hintText: "Search",
+                        suffixIcon: Icons.search_rounded,
+                        controller: _searchCtrl,
+                      ),
                     ),
                   ],
                   columns: [
@@ -497,7 +498,7 @@ void _modal(BuildContext context, String reporterName, String description,
           ),
         ),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.3,
+          width: MediaQuery.of(context).size.width * 0.9,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -538,7 +539,7 @@ void _modal(BuildContext context, String reporterName, String description,
                 crossAxisAlignment: WrapCrossAlignment.start,
                 children: [
                   const Text(
-                    "Reported Plate Number:",
+                    "Plate Number:",
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Colors.grey,
@@ -582,22 +583,9 @@ void _modal(BuildContext context, String reporterName, String description,
               ),
               const SizedBox(height: 8),
               if (attachmentUrls.isNotEmpty)
-                Container(
-                  height: MediaQuery.of(context).size.height * 0.3,
-                  width: MediaQuery.of(context).size.width * 0.3,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      attachmentUrls,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                )
+                HoverableImage(imageUrl: attachmentUrls)
               else
-                Text(
+                const Text(
                   'No attachment available.',
                   style: TextStyle(color: Colors.grey),
                 ),
@@ -621,4 +609,100 @@ void _modal(BuildContext context, String reporterName, String description,
       );
     },
   );
+}
+
+class HoverableImage extends StatefulWidget {
+  final String imageUrl;
+
+  const HoverableImage({required this.imageUrl, Key? key}) : super(key: key);
+
+  @override
+  _HoverableImageState createState() => _HoverableImageState();
+}
+
+class _HoverableImageState extends State<HoverableImage> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() {
+          _isHovered = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          _isHovered = false;
+        });
+      },
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImageViewer(imageUrl: widget.imageUrl),
+            ),
+          );
+        },
+        child: AnimatedScale(
+          scale: _isHovered ? 1.03 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.fastOutSlowIn,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.3,
+            width: MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                widget.imageUrl,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ImageViewer extends StatelessWidget {
+  final String imageUrl;
+
+  const ImageViewer({required this.imageUrl, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: blackColor,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IconButton.filled(
+              style: const ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(whiteColor)),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: blackColor,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Image.network(imageUrl),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
