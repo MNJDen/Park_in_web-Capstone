@@ -6,7 +6,6 @@ import 'package:park_in_web/screens/report_main.dart';
 import 'package:park_in_web/screens/sign_in_main.dart';
 import 'package:park_in_web/screens/tickets_main.dart';
 import 'package:park_in_web/screens/view_main.dart';
-import 'package:park_in_web/services/Auth/Auth_Gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,29 +50,13 @@ class MyApp extends StatelessWidget {
       ).copyWith(
         colorScheme: ThemeData().colorScheme.copyWith(primary: blueColor),
       ),
-      home: const RootPage(),
+      initialRoute: '/sign-in',
       routes: {
         '/sign-in': (context) => const SignInMain(),
         '/reports': (context) => const ReportMain(),
         '/tickets-issued': (context) => const TicketsMain(),
         '/view': (context) => const ViewMain(),
       },
-    );
-  }
-}
-
-class RootPage extends StatefulWidget {
-  const RootPage({super.key});
-
-  @override
-  State<RootPage> createState() => _RootPageState();
-}
-
-class _RootPageState extends State<RootPage> {
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: AuthGate(),
     );
   }
 }
