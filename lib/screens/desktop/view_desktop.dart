@@ -61,12 +61,12 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
               fit: StackFit.expand,
               children: [
                 Positioned(
-                  child: Image.asset(
-                    'assets/images/bgdot.png',
-                    height: 1000,
-                    width: 1000,
-                    repeat: ImageRepeat.repeat,
-                    color: blueColor.withOpacity(0.2),
+                  child: Opacity(
+                    opacity: 0.3,
+                    child: Image.asset(
+                      'assets/images/view_bg.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -110,29 +110,29 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               "Available Parking Spaces",
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 55,
                             ),
                             Center(
                               child: Text(
                                 totalParkingCount.toString(),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 150,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 55,
                             ),
-                            Align(
+                            const Align(
                               alignment: Alignment.bottomRight,
                               child: Text(
                                 "Approximately",
