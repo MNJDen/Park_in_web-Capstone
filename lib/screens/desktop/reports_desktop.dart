@@ -51,7 +51,7 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
         reports.sort((a, b) {
           DateTime dateA = (a['timestamp'] as Timestamp).toDate();
           DateTime dateB = (b['timestamp'] as Timestamp).toDate();
-          return dateB.compareTo(dateA); // Sort in ascending order
+          return dateA.compareTo(dateB); // Sort in ascending order
         });
 
         // Initialize filteredReports to display all tickets initially
