@@ -337,17 +337,17 @@ class _TicketsMobileScreenState extends State<TicketsMobileScreen> {
                 ),
                 child: PaginatedDataTable(
                   header: const Text(
-                    '',
-                    // style: TextStyle(
-                    //   fontWeight: FontWeight.bold,
-                    //   fontSize: 10,
-                    //   color: blackColor,
-                    // ),
+                    'Tickets Cited',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: blackColor,
+                    ),
                   ),
                   actions: [
                     SizedBox(
                       height: 40,
-                      width: 170,
+                      width: 120,
                       child: PRKSearchField(
                           hintText: "Search",
                           suffixIcon: Icons.search_rounded,
@@ -356,42 +356,42 @@ class _TicketsMobileScreenState extends State<TicketsMobileScreen> {
                   ],
                   columns: [
                     DataColumn(
-                      label: Text("Ticket ID"),
+                      label: const Text("Ticket ID"),
                       onSort: (columnIndex, ascending) => _sort<String>(
                           (report) => report['docID'] ?? 0,
                           columnIndex,
                           ascending),
                     ),
                     DataColumn(
-                      label: Text("Ticketed To"),
+                      label: const Text("Ticketed To"),
                       onSort: (columnIndex, ascending) => _sort<String>(
                           (report) => report['plate_number'] ?? 0,
                           columnIndex,
                           ascending),
                     ),
                     DataColumn(
-                      label: Text("Vehicle Type"),
+                      label: const Text("Vehicle Type"),
                       onSort: (columnIndex, ascending) => _sort<String>(
                           (report) => report['vehicle_type'] ?? 0,
                           columnIndex,
                           ascending),
                     ),
                     DataColumn(
-                      label: Text("Violation"),
+                      label: const Text("Violation"),
                       onSort: (columnIndex, ascending) => _sort<String>(
                           (report) => report['violation'] ?? 0,
                           columnIndex,
                           ascending),
                     ),
                     DataColumn(
-                      label: Text("Status"),
+                      label: const Text("Status"),
                       onSort: (columnIndex, ascending) => _sort<String>(
                           (report) => report['status'] ?? 0,
                           columnIndex,
                           ascending),
                     ),
                     DataColumn(
-                      label: Text("Date"),
+                      label: const Text("Date"),
                       onSort: (columnIndex, ascending) => _sort<DateTime>(
                           (report) =>
                               (report['timestamp'] as Timestamp).toDate(),
@@ -551,12 +551,11 @@ void _modal(
           ),
         ),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.3,
+          width: MediaQuery.of(context).size.width * 0.9,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Wrap(
                     spacing: 4,
@@ -584,18 +583,34 @@ void _modal(
                       ),
                     ],
                   ),
-                  Text(
-                    timestamp,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black,
-                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      const Text(
+                        'Date & Time: ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        timestamp,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Wrap(
                     spacing: 4,
@@ -616,12 +631,29 @@ void _modal(
                       ),
                     ],
                   ),
-                  Text(
-                    vehicleType,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black,
-                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      const Text(
+                        'Vehicle Type: ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        vehicleType,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -696,68 +728,44 @@ void _modal(
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (attachmentUrl1.isNotEmpty)
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      width: MediaQuery.of(context).size.width * 0.095,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: blackColor.withOpacity(0.15),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
+              for (int i = 0;
+                  i < [attachmentUrl1, attachmentUrl2, attachmentUrl3].length;
+                  i++)
+                if ([attachmentUrl1, attachmentUrl2, attachmentUrl3][i]
+                    .isNotEmpty)
+                  Column(
+                    children: [
+                      HoverableImage(
+                        imageUrl: [
                           attachmentUrl1,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  if (attachmentUrl2.isNotEmpty)
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      width: MediaQuery.of(context).size.width * 0.095,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: blackColor.withOpacity(0.15),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
                           attachmentUrl2,
-                          fit: BoxFit.cover,
-                        ),
+                          attachmentUrl3
+                        ][i],
+                        imageUrls: [
+                          attachmentUrl1,
+                          attachmentUrl2,
+                          attachmentUrl3
+                        ],
+                        index: i,
+                        onTap: (index) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ImageViewer(
+                                imageUrls: [
+                                  attachmentUrl1,
+                                  attachmentUrl2,
+                                  attachmentUrl3
+                                ],
+                                initialIndex: index,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  if (attachmentUrl3.isNotEmpty)
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      width: MediaQuery.of(context).size.width * 0.095,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: blackColor.withOpacity(0.15),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          attachmentUrl3,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+                      const SizedBox(height: 4)
+                    ],
+                  )
             ],
           ),
         ),
@@ -796,7 +804,7 @@ void _modal(
             },
             child: Text(
               status == 'Resolved' ? "Revert to Pending?" : "Resolve",
-              style: TextStyle(
+              style: const TextStyle(
                 color: whiteColor,
                 fontWeight: FontWeight.w500,
               ),
@@ -951,5 +959,162 @@ void _confirmRevertModal(BuildContext context, String docID) async {
       },
     );
     Navigator.of(context).pop();
+  }
+}
+
+class HoverableImage extends StatefulWidget {
+  final String imageUrl;
+  final List<String> imageUrls;
+  final int index;
+  final void Function(int) onTap;
+
+  const HoverableImage({
+    Key? key,
+    required this.imageUrl,
+    required this.imageUrls,
+    required this.index,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  _HoverableImageState createState() => _HoverableImageState();
+}
+
+class _HoverableImageState extends State<HoverableImage> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () => widget.onTap(widget.index),
+        child: AnimatedScale(
+          scale: _isHovered ? 1.03 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.fastOutSlowIn,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.15,
+            width: MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: blackColor.withOpacity(0.15),
+                width: 0.5,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                widget.imageUrl,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ImageViewer extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const ImageViewer({
+    super.key,
+    required this.imageUrls,
+    this.initialIndex = 0,
+  });
+
+  @override
+  _ImageViewerState createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<ImageViewer> {
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: blackColor,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IconButton.filled(
+              style: const ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(whiteColor)),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: blackColor,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Image.network(
+                widget.imageUrls[_currentIndex],
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding:
+                EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.03),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                hoverColor: whiteColor.withOpacity(0.2),
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: whiteColor,
+                ),
+                onPressed: _currentIndex > 0
+                    ? () {
+                        setState(() {
+                          _currentIndex--;
+                        });
+                      }
+                    : null,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+                right: MediaQuery.of(context).size.width * 0.03),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                hoverColor: whiteColor.withOpacity(0.2),
+                icon: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: whiteColor,
+                ),
+                onPressed: _currentIndex < widget.imageUrls.length - 1
+                    ? () {
+                        setState(() {
+                          _currentIndex++;
+                        });
+                      }
+                    : null,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
