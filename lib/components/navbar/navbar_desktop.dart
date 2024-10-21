@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
-import 'package:park_in_web/screens/sign_in_main.dart';
 import 'package:park_in_web/services/Auth/Auth_Service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,7 +50,7 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          title: Text(
+          title: const Text(
             'Confirm Sign Out',
             style: TextStyle(
               fontSize: 20,
@@ -59,13 +58,13 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
               color: blackColor,
             ),
           ),
-          content: Container(
+          content: const SizedBox(
             height: 40,
             child: Text('Are you sure you want to exit?'),
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -77,7 +76,7 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'Sign Out',
                 style: TextStyle(color: whiteColor),
               ),
@@ -113,7 +112,7 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
     return Padding(
       padding: const EdgeInsets.only(top: 28),
       child: Container(
-        padding: const EdgeInsets.all(30),
+        padding: const EdgeInsets.all(25),
         margin: EdgeInsets.symmetric(
           horizontal: MediaQuery.of(context).size.width * .1,
         ),
