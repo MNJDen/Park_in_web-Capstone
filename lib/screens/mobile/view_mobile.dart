@@ -119,12 +119,21 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                           height: 55,
                         ),
                         Center(
-                          child: Text(
-                            totalParkingCount.toString(),
-                            style: const TextStyle(
-                              fontSize: 80,
-                              fontWeight: FontWeight.bold,
+                          child: TweenAnimationBuilder<int>(
+                            tween: IntTween(
+                              begin: 0,
+                              end: totalParkingCount,
                             ),
+                            duration: const Duration(seconds: 1),
+                            builder: (context, value, child) {
+                              return Text(
+                                value.toString(),
+                                style: const TextStyle(
+                                  fontSize: 80,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(
