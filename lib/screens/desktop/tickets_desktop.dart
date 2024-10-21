@@ -4,6 +4,7 @@ import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
 class TicketsDesktopScreen extends StatefulWidget {
   const TicketsDesktopScreen({super.key});
@@ -45,7 +46,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
     _firestore.collection('Violation Ticket').snapshots().listen((snapshot) {
       setState(() {
         tickets = snapshot.docs.map((doc) {
-          Map<String, dynamic> ticketData = doc.data() as Map<String, dynamic>;
+          Map<String, dynamic> ticketData = doc.data();
           ticketData['docID'] = doc.id;
           return ticketData;
         }).toList();
@@ -59,6 +60,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
 
         // Initialize filteredTickets to display all tickets initially
         filteredTickets = List.from(tickets);
+
         _isLoading = false;
       });
     });
@@ -87,12 +89,6 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
           if (timestamp != null) {
             ticketDate = dateFormatter.format(timestamp.toDate()).toLowerCase();
           }
-
-          // // Debugging print statements
-          // print('Searching for: $query');
-          // print('Plate Number: $ticketedTo');
-          // print('Vehicle Type: $vehicleType');
-          // print('Violation: $violation');
 
           return ticketedTo.contains(query) ||
               vehicleType.contains(query) ||
@@ -226,9 +222,11 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                 sortColumnIndex: _sortColumnIndex,
                 sortAscending: _isAscending,
                 source: ReportDataSource(filteredTickets, context),
-                rowsPerPage: 11,
+                rowsPerPage: 10,
                 showCheckboxColumn: false,
                 arrowHeadColor: blueColor,
+                showEmptyRows: true,
+                showFirstLastButtons: true,
               ),
             ),
           ),
@@ -271,7 +269,33 @@ class ReportDataSource extends DataTableSource {
         DataCell(Text(ticketedTo)),
         DataCell(Text(vehicleType)),
         DataCell(Text(violation)),
-        DataCell(Text(status)),
+        DataCell(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: status == 'Resolved'
+                  ? parkingGreenColor.withOpacity(0.08)
+                  : status == 'Pending'
+                      ? parkingOrangeColor.withOpacity(0.07)
+                      : blackColor,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                fontWeight: FontWeight.normal,
+                color: status == 'Resolved'
+                    ? parkingGreenColor
+                    : status == 'Pending'
+                        ? parkingOrangeColor
+                        : blackColor,
+              ),
+            ),
+          ),
+        ),
         DataCell(Text(formattedDateTime)),
       ],
       onSelectChanged: (selected) {
@@ -295,9 +319,8 @@ class ReportDataSource extends DataTableSource {
         (states) {
           if (states.contains(WidgetState.hovered)) {
             return blackColor.withOpacity(0.05);
-          } else {
-            return Colors.transparent;
           }
+          return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
         },
       ),
     );
@@ -393,23 +416,23 @@ void _modal(
                         plateNo,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
-                          color: Colors.black,
+                          color: blackColor,
                         ),
                       ),
                       Text(
                         '($userNumber)',
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
-                          color: Colors.black,
+                          color: blackColor,
                         ),
                       ),
                     ],
                   ),
                   Text(
                     timestamp,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: Colors.black,
+                      color: blackColor.withOpacity(0.5),
                     ),
                   ),
                 ],
@@ -432,16 +455,16 @@ void _modal(
                         mobileNo,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
-                          color: Colors.black,
+                          color: blackColor,
                         ),
                       ),
                     ],
                   ),
                   Text(
                     vehicleType,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: Colors.black,
+                      color: blackColor.withOpacity(0.5),
                     ),
                   ),
                 ],
@@ -462,7 +485,7 @@ void _modal(
                     violation,
                     style: const TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: Colors.black,
+                      color: blackColor,
                     ),
                   ),
                 ],
@@ -483,13 +506,14 @@ void _modal(
                     description,
                     style: const TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: Colors.black,
+                      color: blackColor,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 4,
                 children: [
                   const Text(
@@ -499,11 +523,29 @@ void _modal(
                       color: Colors.grey,
                     ),
                   ),
-                  Text(
-                    status,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.normal,
-                      color: Colors.black,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: status == 'Resolved'
+                          ? parkingGreenColor.withOpacity(0.08)
+                          : status == 'Pending'
+                              ? parkingOrangeColor.withOpacity(0.07)
+                              : blackColor,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        fontWeight: FontWeight.normal,
+                        color: status == 'Resolved'
+                            ? parkingGreenColor
+                            : status == 'Pending'
+                                ? parkingOrangeColor
+                                : blackColor,
+                      ),
                     ),
                   ),
                 ],
@@ -767,6 +809,8 @@ class HoverableImage extends StatefulWidget {
 
 class _HoverableImageState extends State<HoverableImage> {
   bool _isHovered = false;
+  bool _isLoading = true; // Add a loading state
+  double _opacity = 0.0; // For the fade-in effect
 
   @override
   Widget build(BuildContext context) {
@@ -791,9 +835,42 @@ class _HoverableImageState extends State<HoverableImage> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                widget.imageUrl,
-                fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  if (_isLoading)
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        color: Colors.white,
+                        height: MediaQuery.of(context).size.height * 0.2,
+                        width: MediaQuery.of(context).size.width * 0.095,
+                      ),
+                    ),
+                  AnimatedOpacity(
+                    opacity: _opacity,
+                    duration: const Duration(milliseconds: 500),
+                    child: Image.network(
+                      widget.imageUrl,
+                      fit: BoxFit.cover,
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      width: MediaQuery.of(context).size.width * 0.095,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          Future.microtask(() {
+                            setState(() {
+                              _isLoading = false;
+                              _opacity = 1.0;
+                            });
+                          });
+                          return child;
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
