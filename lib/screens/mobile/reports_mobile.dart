@@ -7,6 +7,7 @@ import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/ui/primary_btn.dart';
 import 'package:park_in_web/services/Auth/Auth_Service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ReportsMobileScreen extends StatefulWidget {
   const ReportsMobileScreen({super.key});
@@ -160,7 +161,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          title: Text(
+          title: const Text(
             'Confirm Sign Out',
             style: TextStyle(
               fontSize: 20,
@@ -168,13 +169,13 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
               color: blackColor,
             ),
           ),
-          content: Container(
+          content: const SizedBox(
             height: 40,
             child: Text('Are you sure you want to exit?'),
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -186,7 +187,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'Sign Out',
                 style: TextStyle(color: whiteColor),
               ),
@@ -294,106 +295,104 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
           ],
         ),
       ),
-      body: Column(
+      body: ListView(
         children: [
           NavbarMobile(
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
             pageName: pageName,
           ),
           const SizedBox(
-            height: 28,
+            height: 12,
           ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(30),
-              margin: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * .1,
+          Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width * .05,
+            ),
+            decoration: BoxDecoration(
+              color: whiteColor,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: blackColor.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                dataTableTheme: DataTableThemeData(
+                  dividerThickness: 0.2,
+                  headingRowColor:
+                      WidgetStateColor.resolveWith((states) => whiteColor),
+                  dataRowColor:
+                      WidgetStateColor.resolveWith((states) => whiteColor),
+                  headingTextStyle: const TextStyle(
+                      color: blackColor, fontWeight: FontWeight.w500),
+                  dataTextStyle: const TextStyle(
+                    color: blackColor,
+                  ),
+                ),
               ),
-              decoration: BoxDecoration(
-                color: whiteColor,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+              child: PaginatedDataTable(
+                header: const Text(
+                  'Incident Reports',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: blackColor,
+                  ),
+                ),
+                actions: [
+                  SizedBox(
+                    height: 40,
+                    width: 120,
+                    child: PRKSearchField(
+                      hintText: "Search",
+                      suffixIcon: Icons.search_rounded,
+                      controller: _searchCtrl,
+                    ),
                   ),
                 ],
-              ),
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dataTableTheme: DataTableThemeData(
-                    dividerThickness: 0.2,
-                    headingRowColor:
-                        WidgetStateColor.resolveWith((states) => whiteColor),
-                    dataRowColor:
-                        WidgetStateColor.resolveWith((states) => whiteColor),
-                    headingTextStyle: const TextStyle(
-                        color: blackColor, fontWeight: FontWeight.w500),
-                    dataTextStyle: const TextStyle(
-                      color: blackColor,
-                    ),
+                columns: [
+                  DataColumn(
+                    label: const Text("Report ID"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['docID'] ?? 0,
+                        columnIndex,
+                        ascending),
                   ),
-                ),
-                child: PaginatedDataTable(
-                  header: const Text(
-                    'Incident Reports',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: blackColor,
-                    ),
+                  DataColumn(
+                    label: const Text("Reported By"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) => report['reporterName']?.toString() ?? '',
+                        columnIndex,
+                        ascending),
                   ),
-                  actions: [
-                    SizedBox(
-                      height: 40,
-                      width: 120,
-                      child: PRKSearchField(
-                        hintText: "Search",
-                        suffixIcon: Icons.search_rounded,
-                        controller: _searchCtrl,
-                      ),
-                    ),
-                  ],
-                  columns: [
-                    DataColumn(
-                      label: const Text("Report ID"),
-                      onSort: (columnIndex, ascending) => _sort<String>(
-                          (report) => report['docID'] ?? 0,
-                          columnIndex,
-                          ascending),
-                    ),
-                    DataColumn(
-                      label: const Text("Reported By"),
-                      onSort: (columnIndex, ascending) => _sort<String>(
-                          (report) => report['reporterName']?.toString() ?? '',
-                          columnIndex,
-                          ascending),
-                    ),
-                    DataColumn(
-                      label: const Text("Report Description"),
-                      onSort: (columnIndex, ascending) => _sort<String>(
-                          (report) =>
-                              report['reportDescription']?.toString() ?? '',
-                          columnIndex,
-                          ascending),
-                    ),
-                    DataColumn(
-                      label: const Text("Date"),
-                      onSort: (columnIndex, ascending) => _sort<DateTime>(
-                          (report) =>
-                              (report['timestamp'] as Timestamp).toDate(),
-                          columnIndex,
-                          ascending),
-                    ),
-                  ],
-                  sortColumnIndex: _sortColumnIndex,
-                  sortAscending: _isAscending,
-                  source: ReportDataSource(filteredReports, context),
-                  rowsPerPage: 11,
-                  showCheckboxColumn: false,
-                  arrowHeadColor: blueColor,
-                ),
+                  DataColumn(
+                    label: const Text("Report Description"),
+                    onSort: (columnIndex, ascending) => _sort<String>(
+                        (report) =>
+                            report['reportDescription']?.toString() ?? '',
+                        columnIndex,
+                        ascending),
+                  ),
+                  DataColumn(
+                    label: const Text("Date"),
+                    onSort: (columnIndex, ascending) => _sort<DateTime>(
+                        (report) => (report['timestamp'] as Timestamp).toDate(),
+                        columnIndex,
+                        ascending),
+                  ),
+                ],
+                sortColumnIndex: _sortColumnIndex,
+                sortAscending: _isAscending,
+                source: ReportDataSource(filteredReports, context),
+                rowsPerPage: 10,
+                showCheckboxColumn: false,
+                arrowHeadColor: blueColor,
+                showEmptyRows: true,
+                showFirstLastButtons: true,
               ),
             ),
           ),
@@ -452,9 +451,8 @@ class ReportDataSource extends DataTableSource {
         (states) {
           if (states.contains(WidgetState.hovered)) {
             return blackColor.withOpacity(0.05);
-          } else {
-            return Colors.transparent;
           }
+          return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
         },
       ),
     );
@@ -519,7 +517,7 @@ void _modal(BuildContext context, String reporterName, String description,
                         reporterName,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
-                          color: Colors.black,
+                          color: blackColor,
                         ),
                       ),
                     ],
@@ -548,7 +546,7 @@ void _modal(BuildContext context, String reporterName, String description,
                   Text(
                     reportedPlateNumber,
                     style: const TextStyle(
-                      color: Colors.black,
+                      color: blackColor,
                     ),
                   ),
                 ],
@@ -568,7 +566,7 @@ void _modal(BuildContext context, String reporterName, String description,
                   Text(
                     description,
                     style: const TextStyle(
-                      color: Colors.black,
+                      color: blackColor,
                     ),
                   ),
                 ],
@@ -622,6 +620,8 @@ class HoverableImage extends StatefulWidget {
 
 class _HoverableImageState extends State<HoverableImage> {
   bool _isHovered = false;
+  bool _isLoading = true;
+  double _opacity = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -657,9 +657,44 @@ class _HoverableImageState extends State<HoverableImage> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                widget.imageUrl,
-                fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  // Shimmer effect while loading
+                  if (_isLoading)
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        color: Colors.white,
+                        height: MediaQuery.of(context).size.height * 0.3,
+                        width: MediaQuery.of(context).size.width * 0.9,
+                      ),
+                    ),
+
+                  AnimatedOpacity(
+                    opacity: _opacity,
+                    duration: const Duration(milliseconds: 500),
+                    child: Image.network(
+                      widget.imageUrl,
+                      fit: BoxFit.cover,
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          Future.microtask(() {
+                            setState(() {
+                              _isLoading = false;
+                              _opacity = 1.0;
+                            });
+                          });
+                          return child;
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
