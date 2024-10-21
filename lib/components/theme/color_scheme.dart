@@ -9,5 +9,6 @@ const yellowColor = Color.fromRGBO(255, 219, 35, 1);
 const parkingYellowColor = Color.fromRGBO(255, 214, 0, 1);
 const parkingGreenColor = Color.fromRGBO(20, 255, 0, 1);
 const parkingRedColor = Color.fromRGBO(255, 0, 0, 1);
+const parkingOrangeColor = Color.fromRGBO(255, 115, 0, 1);
 const errorColor = Color.fromRGBO(255, 0, 0, 1);
 const successColor = Color.fromRGBO(20, 255, 0, 1);
