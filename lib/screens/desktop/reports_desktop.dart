@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ReportsDesktopScreen extends StatefulWidget {
   const ReportsDesktopScreen({super.key});
@@ -210,9 +211,11 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                 sortColumnIndex: _sortColumnIndex,
                 sortAscending: _isAscending,
                 source: ReportDataSource(filteredReports, context),
-                rowsPerPage: 11,
+                rowsPerPage: 10,
                 showCheckboxColumn: false,
                 arrowHeadColor: blueColor,
+                showEmptyRows: true,
+                showFirstLastButtons: true,
               ),
             ),
           ),
@@ -264,13 +267,12 @@ class ReportDataSource extends DataTableSource {
           );
         }
       },
-      color: WidgetStateProperty.resolveWith(
-        (states) {
+      color: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
           if (states.contains(WidgetState.hovered)) {
             return blackColor.withOpacity(0.05);
-          } else {
-            return Colors.transparent;
           }
+          return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
         },
       ),
     );
@@ -335,7 +337,7 @@ void _modal(BuildContext context, String reporterName, String description,
                         reporterName,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
-                          color: Colors.black,
+                          color: blackColor,
                         ),
                       ),
                     ],
@@ -355,7 +357,7 @@ void _modal(BuildContext context, String reporterName, String description,
                 crossAxisAlignment: WrapCrossAlignment.start,
                 children: [
                   const Text(
-                    "Reported Plate Number:",
+                    "Plate Number:",
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Colors.grey,
@@ -364,7 +366,7 @@ void _modal(BuildContext context, String reporterName, String description,
                   Text(
                     reportedPlateNumber,
                     style: const TextStyle(
-                      color: Colors.black,
+                      color: blackColor,
                     ),
                   ),
                 ],
@@ -384,7 +386,7 @@ void _modal(BuildContext context, String reporterName, String description,
                   Text(
                     description,
                     style: const TextStyle(
-                      color: Colors.black,
+                      color: blackColor,
                     ),
                   ),
                 ],
@@ -438,6 +440,8 @@ class HoverableImage extends StatefulWidget {
 
 class _HoverableImageState extends State<HoverableImage> {
   bool _isHovered = false;
+  bool _isLoading = true;
+  double _opacity = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -473,9 +477,42 @@ class _HoverableImageState extends State<HoverableImage> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                widget.imageUrl,
-                fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  if (_isLoading)
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        color: Colors.white,
+                        height: MediaQuery.of(context).size.height * 0.3,
+                        width: MediaQuery.of(context).size.width * 0.3,
+                      ),
+                    ),
+                  AnimatedOpacity(
+                    opacity: _opacity,
+                    duration: const Duration(milliseconds: 500),
+                    child: Image.network(
+                      widget.imageUrl,
+                      fit: BoxFit.cover,
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.width * 0.3,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          Future.microtask(() {
+                            setState(() {
+                              _isLoading = false;
+                              _opacity = 1.0;
+                            });
+                          });
+                          return child;
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
