@@ -3,13 +3,13 @@ import 'package:park_in_web/components/theme/color_scheme.dart';
 
 class PRKSearchField extends StatefulWidget {
   final String hintText;
-  final IconData? suffixIcon;
+  final IconData? prefixIcon;
   final TextEditingController controller;
 
   const PRKSearchField({
     super.key,
     required this.hintText,
-    this.suffixIcon,
+    this.prefixIcon,
     required this.controller,
   });
 
@@ -56,8 +56,8 @@ class _PRKSearchFieldState extends State<PRKSearchField> {
           horizontal: 12,
           vertical: 16,
         ),
-        suffixIcon: Icon(
-          widget.suffixIcon,
+        prefixIcon: Icon(
+          widget.prefixIcon,
           color: _isFocused ? blueColor : blackColor,
           size: 20,
         ),
