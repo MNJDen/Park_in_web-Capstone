@@ -150,126 +150,199 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      body: ListView(
-        children: [
-          const NavbarDesktop(),
-          const SizedBox(height: 28),
-          Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            // height: MediaQuery.of(context).size.height * 0.8,
-            margin: EdgeInsets.symmetric(
-              horizontal: MediaQuery.of(context).size.width * 0.1,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: blackColor.withOpacity(0.05),
-              //     blurRadius: 8,
-              //     offset: const Offset(0, 4),
-              //   ),
-              // ],
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dataTableTheme: DataTableThemeData(
-                  dividerThickness: 0.2,
-                  headingRowColor:
-                      WidgetStateColor.resolveWith((states) => whiteColor),
-                  dataRowColor:
-                      WidgetStateColor.resolveWith((states) => whiteColor),
-                  headingTextStyle: const TextStyle(
-                      color: blackColor, fontWeight: FontWeight.w500),
-                  dataTextStyle: const TextStyle(
-                    color: blackColor,
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Row(
+          children: [
+            const NavbarDesktop(),
+            Expanded(
+              child: Container(
+                height: MediaQuery.of(context).size.height,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
                 ),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    "Incident Reports",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                      color: blackColor,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 40,
-                    width: 170,
-                    child: PRKSearchField(
-                        hintText: "Search",
-                        suffixIcon: Icons.search_rounded,
-                        controller: _searchCtrl),
-                  ),
-                  DataTable(
-                    columns: [
-                      DataColumn(
-                        label: const Text("Report ID"),
-                        onSort: (columnIndex, ascending) => _sort<String>(
-                            (report) => report['docID'] ?? 0,
-                            columnIndex,
-                            ascending),
-                      ),
-                      DataColumn(
-                        label: const Text("Reported By"),
-                        onSort: (columnIndex, ascending) => _sort<String>(
-                            (report) =>
-                                report['reporterName']?.toString() ?? '',
-                            columnIndex,
-                            ascending),
-                      ),
-                      DataColumn(
-                        label: const Text("Report Description"),
-                        onSort: (columnIndex, ascending) => _sort<String>(
-                            (report) =>
-                                report['reportDescription']?.toString() ?? '',
-                            columnIndex,
-                            ascending),
-                      ),
-                      DataColumn(
-                        label: const Text("Date"),
-                        onSort: (columnIndex, ascending) => _sort<DateTime>(
-                            (report) =>
-                                (report['timestamp'] as Timestamp).toDate(),
-                            columnIndex,
-                            ascending),
-                      ),
-                    ],
-                    sortColumnIndex: _sortColumnIndex,
-                    sortAscending: _isAscending,
-                    rows: _buildReportRows(filteredReports, context),
-                    showCheckboxColumn: false,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(totalPages, (index) {
-                      return TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentPage = index;
-                          });
-                        },
-                        child: Text(
-                          "${index + 1}",
+                decoration: BoxDecoration(
+                  color: whiteColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Incident Reports",
                           style: TextStyle(
-                            color:
-                                index == _currentPage ? blueColor : blackColor,
-                            fontWeight: index == _currentPage
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 24,
+                            color: blackColor,
                           ),
                         ),
-                      );
-                    }),
-                  ),
-                ],
+                        SizedBox(
+                          height: 46,
+                          width: 210,
+                          child: PRKSearchField(
+                            hintText: "Search",
+                            prefixIcon: Icons.search_rounded,
+                            controller: _searchCtrl,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              dataTableTheme: DataTableThemeData(
+                                dividerThickness: 0.2,
+                                headingRowColor: WidgetStateColor.resolveWith(
+                                    (states) => whiteColor),
+                                dataRowColor: WidgetStateColor.resolveWith(
+                                    (states) => whiteColor),
+                                headingTextStyle: const TextStyle(
+                                    color: blackColor,
+                                    fontWeight: FontWeight.w500),
+                                dataTextStyle: const TextStyle(
+                                  color: blackColor,
+                                ),
+                              ),
+                            ),
+                            child: DataTable(
+                              columns: [
+                                DataColumn(
+                                  label: const Text("Report ID"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>(
+                                          (report) => report['docID'] ?? 0,
+                                          columnIndex,
+                                          ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Reported By"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>(
+                                          (report) =>
+                                              report['reporterName']
+                                                  ?.toString() ??
+                                              '',
+                                          columnIndex,
+                                          ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Report Description"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>(
+                                          (report) =>
+                                              report['reportDescription']
+                                                  ?.toString() ??
+                                              '',
+                                          columnIndex,
+                                          ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Date"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<DateTime>(
+                                          (report) =>
+                                              (report['timestamp'] as Timestamp)
+                                                  .toDate(),
+                                          columnIndex,
+                                          ascending),
+                                ),
+                              ],
+                              dataRowMinHeight:
+                                  MediaQuery.of(context).size.height * 0.03,
+                              dataRowMaxHeight:
+                                  MediaQuery.of(context).size.height * 0.071,
+                              sortColumnIndex: _sortColumnIndex,
+                              sortAscending: _isAscending,
+                              rows: _buildReportRows(filteredReports, context),
+                              showCheckboxColumn: false,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          // crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "showing 10 out of 1024",
+                              style: TextStyle(
+                                  color: blackColor.withOpacity(0.5),
+                                  fontSize: 12),
+                            )
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: List.generate(
+                            totalPages,
+                            (index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: TextButton(
+                                  style: ButtonStyle(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                      index == _currentPage
+                                          ? blueColor
+                                          : whiteColor,
+                                    ),
+                                    shape: WidgetStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        side: BorderSide(
+                                          color: index == _currentPage
+                                              ? Colors.transparent
+                                              : blueColor,
+                                        ),
+                                      ),
+                                    ),
+                                    fixedSize: WidgetStateProperty.all(
+                                      const Size(30, 40),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _currentPage = index;
+                                    });
+                                  },
+                                  child: Text(
+                                    "${index + 1}",
+                                    style: TextStyle(
+                                      color: index == _currentPage
+                                          ? whiteColor
+                                          : blueColor,
+                                      fontWeight: index == _currentPage
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
