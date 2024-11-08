@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
+import 'package:park_in_web/components/ui/primary_btn.dart';
 import 'package:park_in_web/services/Auth/Auth_Service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -109,80 +110,85 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 28),
-      child: Container(
-        padding: const EdgeInsets.all(25),
-        margin: EdgeInsets.symmetric(
-          horizontal: MediaQuery.of(context).size.width * .1,
-        ),
-        decoration: BoxDecoration(
-          color: whiteColor,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: blackColor.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Image.asset(
-              "assets/images/Logo.png",
-              width: 30,
-            ),
-            Expanded(
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _NavbarDesktopItem(
-                      title: "Reports",
-                      isSelected: _selectedPage == '/reports',
-                      onTap: () => _onItemTap("Reports"),
-                    ),
-                    _NavbarDesktopItem(
-                      title: "Tickets Issued",
-                      isSelected: _selectedPage == '/tickets-issued',
-                      onTap: () => _onItemTap("Tickets Issued"),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                logout(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: blueColor,
-                shape: RoundedRectangleBorder(
+    bool _isHovered = false;
+
+    return Container(
+      width: MediaQuery.of(context).size.height * 0.25,
+      padding: const EdgeInsets.only(right: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.start,
+            spacing: 20,
+            children: [
+              Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: blueColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              ),
-              child: const Text(
-                'Log Out',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
+                child: Center(
+                  child: Image.asset(
+                    "assets/images/Logo.png",
+                    width: 18,
+                    color: whiteColor,
+                  ),
                 ),
               ),
+              const Text(
+                "Park-in",
+                style: TextStyle(
+                    color: whiteColor, fontSize: 24, fontFamily: "Hiruko Pro"),
+              )
+            ],
+          ),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.07),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _NavbarDesktopItem(
+                  title: "Dashboard",
+                  icon: Icons.bar_chart_rounded,
+                  isSelected: _selectedPage == '/dashboard',
+                  onTap: () => _onItemTap("Dashboard"),
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                _NavbarDesktopItem(
+                  title: "Reports",
+                  icon: Icons.flag_rounded,
+                  isSelected: _selectedPage == '/reports',
+                  onTap: () => _onItemTap("Reports"),
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                _NavbarDesktopItem(
+                  title: "Tickets Issued",
+                  icon: Icons.receipt_long_rounded,
+                  isSelected: _selectedPage == '/tickets-issued',
+                  onTap: () => _onItemTap("Tickets Issued"),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          PRKPrimaryBtn(
+            label: "Sign Out",
+            onPressed: () {
+              logout(context);
+            },
+          )
+        ],
       ),
     );
   }
 }
 
-class _NavbarDesktopItem extends StatelessWidget {
+class _NavbarDesktopItem extends StatefulWidget {
   final String title;
+  final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -190,18 +196,49 @@ class _NavbarDesktopItem extends StatelessWidget {
     required this.title,
     required this.isSelected,
     required this.onTap,
+    required this.icon,
   });
 
   @override
+  State<_NavbarDesktopItem> createState() => _NavbarDesktopItemState();
+}
+
+class _NavbarDesktopItemState extends State<_NavbarDesktopItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Text(
-        title,
-        style: TextStyle(
-          color: isSelected ? blueColor : blackColor,
-          fontSize: 16,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: _isHovered || widget.isSelected ? 1.0 : 0.7,
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            children: [
+              Icon(
+                widget.icon,
+                color: widget.isSelected || _isHovered
+                    ? blueColor
+                    : whiteColor.withOpacity(0.3),
+              ),
+              Text(
+                widget.title,
+                style: TextStyle(
+                  color: widget.isSelected || _isHovered
+                      ? blueColor
+                      : whiteColor.withOpacity(0.3),
+                  fontSize: 16,
+                  fontWeight:
+                      widget.isSelected ? FontWeight.w500 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
