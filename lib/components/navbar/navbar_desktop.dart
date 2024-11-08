@@ -116,7 +116,6 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
       width: MediaQuery.of(context).size.height * 0.25,
       padding: const EdgeInsets.only(right: 24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
@@ -142,11 +141,19 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
               const Text(
                 "Park-in",
                 style: TextStyle(
-                    color: whiteColor, fontSize: 24, fontFamily: "Hiruko Pro"),
+                  color: whiteColor,
+                  fontSize: 24,
+                  fontFamily: "Hiruko Pro",
+                ),
               )
             ],
           ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.07),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+          Divider(
+            thickness: 0.5,
+            color: whiteColor.withOpacity(0.2),
+          ),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.04),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,6 +181,18 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
               ],
             ),
           ),
+          _NavbarDesktopItem(
+            title: "View",
+            icon: Icons.tv_rounded,
+            isSelected: _selectedPage == '/view',
+            onTap: () => _onItemTap("View"),
+          ),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+          Divider(
+            thickness: 0.5,
+            color: whiteColor.withOpacity(0.2),
+          ),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.025),
           PRKPrimaryBtn(
             label: "Sign Out",
             onPressed: () {
@@ -211,7 +230,8 @@ class _NavbarDesktopItemState extends State<_NavbarDesktopItem> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: InkWell(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
