@@ -61,12 +61,17 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
               fit: StackFit.expand,
               children: [
                 Positioned(
-                  child: Opacity(
-                    opacity: 0.3,
-                    child: Image.asset(
-                      'assets/images/view_bg.png',
-                      fit: BoxFit.cover,
-                    ),
+                  child: Image.asset(
+                    'assets/images/dottedbg.png',
+                    repeat: ImageRepeat.repeat,
+                    color: blackColor.withOpacity(0.1),
+                  ),
+                ),
+                Positioned(
+                  bottom: -52,
+                  left: 0,
+                  child: Image.asset(
+                    'assets/images/line2.png',
                   ),
                 ),
                 Positioned(
@@ -78,85 +83,104 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
                     width: 1237,
                   ),
                 ),
+                Positioned(
+                  top: 80,
+                  right: -51,
+                  child: Image.asset(
+                    'assets/images/line1.png',
+                  ),
+                ),
+                Positioned(
+                  bottom: -155,
+                  right: -44,
+                  child: Image.asset(
+                    'assets/images/car.png',
+                  ),
+                ),
+                Positioned(
+                  top: 17,
+                  left: -51,
+                  child: Image.asset(
+                    'assets/images/line3.png',
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 50,
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 100,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: blueColor.withOpacity(0.1),
+                        ),
+                      ),
+                      const Text(
+                        "Download the app now!",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 80),
+                  padding: const EdgeInsets.only(top: 50),
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: Image.asset(
                       "assets/images/Logo.png",
-                      width: 45,
+                      width: 40,
                     ),
                   ),
                 ),
-                Center(
-                  child: SizedBox(
-                    width: 848,
-                    height: 450,
-                    child: AspectRatio(
-                      aspectRatio: 4 / 3,
-                      child: Container(
-                        padding: const EdgeInsets.all(30),
-                        decoration: BoxDecoration(
-                          color: whiteColor,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Available Parking Spaces",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 55,
-                            ),
-                            Center(
-                              child: TweenAnimationBuilder<int>(
-                                tween: IntTween(
-                                  begin: 0,
-                                  end: totalParkingCount,
-                                ),
-                                duration: const Duration(seconds: 1),
-                                builder: (context, value, child) {
-                                  return Text(
-                                    value.toString(),
-                                    style: const TextStyle(
-                                      fontSize: 150,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 55,
-                            ),
-                            const Align(
-                              alignment: Alignment.bottomRight,
-                              child: Text(
-                                "Approximately",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Available Parking Spaces",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Center(
+                      child: TweenAnimationBuilder<int>(
+                        tween: IntTween(
+                          begin: 0,
+                          end: totalParkingCount,
+                        ),
+                        duration: const Duration(seconds: 1),
+                        builder: (context, value, child) {
+                          return Text(
+                            value.toString(),
+                            style: const TextStyle(
+                              fontSize: 200,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    const Text(
+                      "Approximately",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 )
               ],
             ),
