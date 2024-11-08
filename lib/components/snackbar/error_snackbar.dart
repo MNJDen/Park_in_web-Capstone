@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
-void errorSnackbar(BuildContext context, String message) {
+void errorSnackbar(BuildContext context, String message, double? width) {
   final snackBar = SnackBar(
     elevation: 0,
-    width: MediaQuery.of(context).size.width * 0.3,
+    width: width,
     behavior: SnackBarBehavior.floating,
     backgroundColor: blackColor,
     shape: RoundedRectangleBorder(
