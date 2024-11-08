@@ -37,20 +37,22 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                   children: [
                     Row(
                       children: [
-                        const PRKSmallCard(
+                        PRKSmallCard(
                           label: "Two-Wheels",
                           content: "48",
                           sub: "Parking spaces available",
+                          height: MediaQuery.of(context).size.height * 0.2,
                           color: parkingGreenColor,
                           icon: Icons.two_wheeler_rounded,
                         ),
                         SizedBox(
                           width: MediaQuery.of(context).size.width * 0.009,
                         ),
-                        const PRKSmallCard(
+                        PRKSmallCard(
                           label: "Four-Wheels",
                           content: "36",
-                          sub: "Parking spaces available",
+                          sub: "c",
+                          height: MediaQuery.of(context).size.height * 0.2,
                           color: parkingYellowColor,
                           icon: Icons.airport_shuttle_rounded,
                         ),
@@ -61,6 +63,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                           label: "Violations",
                           content: "335",
                           sub: "Infractions committed",
+                          height: MediaQuery.of(context).size.height * 0.2,
                           onPressed: () {},
                         ),
                         SizedBox(
@@ -70,6 +73,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                           label: "Reports",
                           content: "128",
                           sub: "Received reports",
+                          height: MediaQuery.of(context).size.height * 0.2,
                           onPressed: () {},
                         ),
                       ],
