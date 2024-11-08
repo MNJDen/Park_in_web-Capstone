@@ -53,7 +53,7 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: whiteColor,
       body: Column(
         children: [
           Expanded(
@@ -90,13 +90,13 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
                     'assets/images/line1.png',
                   ),
                 ),
-                Positioned(
-                  bottom: -155,
-                  right: -44,
-                  child: Image.asset(
-                    'assets/images/car.png',
-                  ),
-                ),
+                // Positioned(
+                //   bottom: -155,
+                //   right: -44,
+                //   child: Image.asset(
+                //     'assets/images/car.png',
+                //   ),
+                // ),
                 Positioned(
                   top: 17,
                   left: -51,
@@ -181,7 +181,23 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
                       ),
                     ),
                   ],
-                )
+                ),
+                Positioned(
+                  left: 10,
+                  top: 10,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/dashboard');
+                    },
+                    child: Text(
+                      "Go Back",
+                      style: TextStyle(
+                        color: blackColor.withOpacity(0.1),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
