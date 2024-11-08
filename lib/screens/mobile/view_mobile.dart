@@ -61,98 +61,129 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
               fit: StackFit.expand,
               children: [
                 Positioned(
-                  child: Opacity(
-                    opacity: 0.3,
-                    child: Image.asset(
-                      'assets/images/view_bg.png',
-                      fit: BoxFit.cover,
-                    ),
+                  child: Image.asset(
+                    'assets/images/dottedbg.png',
+                    repeat: ImageRepeat.repeat,
+                    color: blackColor.withOpacity(0.1),
                   ),
                 ),
                 Positioned(
-                  bottom: -120,
-                  left: -517,
+                  bottom: 52,
+                  left: -150,
+                  child: Image.asset(
+                    'assets/images/line2.png',
+                    height: 200,
+                  ),
+                ),
+                Positioned(
+                  bottom: -70,
+                  left: -330,
                   child: Image.asset(
                     'assets/images/4-pillars.png',
-                    height: 700,
+                    height: 500,
                     // width: 1237,
                   ),
                 ),
+                Positioned(
+                  top: 80,
+                  right: -291,
+                  child: Image.asset(
+                    'assets/images/line1.png',
+                  ),
+                ),
+                Positioned(
+                  bottom: -70,
+                  right: -15,
+                  child: Image.asset(
+                    'assets/images/car.png',
+                    height: 200,
+                  ),
+                ),
+                Positioned(
+                  top: 90,
+                  left: -231,
+                  child: Image.asset(
+                    'assets/images/line3.png',
+                    height: 300,
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 50,
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 100,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: blueColor.withOpacity(0.1),
+                        ),
+                      ),
+                      const Text(
+                        "Download the app now!",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 80),
+                  padding: const EdgeInsets.only(top: 50),
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: Image.asset(
                       "assets/images/Logo.png",
-                      width: 45,
+                      width: 35,
                     ),
                   ),
                 ),
-                Center(
-                  child: Container(
-                    margin:
-                        EdgeInsets.all(MediaQuery.of(context).size.width * .1),
-                    padding: const EdgeInsets.all(30),
-                    height: 330,
-                    decoration: BoxDecoration(
-                      color: whiteColor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Available Parking Spaces",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Available Parking Spaces",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 55,
-                        ),
-                        Center(
-                          child: TweenAnimationBuilder<int>(
-                            tween: IntTween(
-                              begin: 0,
-                              end: totalParkingCount,
-                            ),
-                            duration: const Duration(seconds: 1),
-                            builder: (context, value, child) {
-                              return Text(
-                                value.toString(),
-                                style: const TextStyle(
-                                  fontSize: 80,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 55,
-                        ),
-                        const Align(
-                          alignment: Alignment.bottomRight,
-                          child: Text(
-                            "Approximately",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(
+                      height: 10,
                     ),
-                  ),
+                    Center(
+                      child: TweenAnimationBuilder<int>(
+                        tween: IntTween(
+                          begin: 0,
+                          end: totalParkingCount,
+                        ),
+                        duration: const Duration(seconds: 1),
+                        builder: (context, value, child) {
+                          return Text(
+                            value.toString(),
+                            style: const TextStyle(
+                              fontSize: 120,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    const Text(
+                      "Approximately",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w300,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 )
               ],
             ),
