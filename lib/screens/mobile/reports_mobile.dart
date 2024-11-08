@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -36,6 +38,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
     super.initState();
     _listenForTicketUpdates();
     _searchCtrl.addListener(_applySearchFilter);
+    fetchTotalItems();
   }
 
   @override
@@ -148,6 +151,31 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
       });
     }
   }
+
+  int _currentPage = 0; // Track current page
+  int _rowsPerPage = 10; // Rows per page
+  int _totalItems = 0;
+  bool isLoading = false;
+
+  Future<void> fetchTotalItems() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final querySnapshot =
+          await _firestore.collection('Incident Report').get();
+
+      _totalItems = querySnapshot.docs.length;
+    } catch (e) {
+      print('Error fetching total items: $e'); // Print error message
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  int get totalPages => (_totalItems / _rowsPerPage).ceil();
 
   void logout(BuildContext context) async {
     final authService = AuthService();
@@ -307,7 +335,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
           ],
         ),
       ),
-      body: ListView(
+      body: Column(
         children: [
           NavbarMobile(
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -346,65 +374,93 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                   ),
                 ),
               ),
-              child: PaginatedDataTable(
-                header: const Text(
-                  'Incident Reports',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: blackColor,
-                  ),
-                ),
-                actions: [
-                  SizedBox(
-                    height: 40,
-                    width: 120,
-                    child: PRKSearchField(
-                      hintText: "Search",
-                      suffixIcon: Icons.search_rounded,
-                      controller: _searchCtrl,
+              child: Column(
+                children: [
+                  const Text(
+                    "Incident Reports",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                      color: blackColor,
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 40,
+                    width: 170,
+                    child: PRKSearchField(
+                        hintText: "Search",
+                        suffixIcon: Icons.search_rounded,
+                        controller: _searchCtrl),
+                  ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: [
+                        DataColumn(
+                          label: const Text(
+                            "Report ID",
+                            softWrap: true,
+                          ),
+                          onSort: (columnIndex, ascending) => _sort<String>(
+                              (report) => report['docID'] ?? 0,
+                              columnIndex,
+                              ascending),
+                        ),
+                        DataColumn(
+                          label: const Text("Reported By"),
+                          onSort: (columnIndex, ascending) => _sort<String>(
+                              (report) =>
+                                  report['reporterName']?.toString() ?? '',
+                              columnIndex,
+                              ascending),
+                        ),
+                        DataColumn(
+                          label: const Text("Report Description"),
+                          onSort: (columnIndex, ascending) => _sort<String>(
+                              (report) =>
+                                  report['reportDescription']?.toString() ?? '',
+                              columnIndex,
+                              ascending),
+                        ),
+                        DataColumn(
+                          label: const Text("Date"),
+                          onSort: (columnIndex, ascending) => _sort<DateTime>(
+                              (report) =>
+                                  (report['timestamp'] as Timestamp).toDate(),
+                              columnIndex,
+                              ascending),
+                        ),
+                      ],
+                      sortColumnIndex: _sortColumnIndex,
+                      sortAscending: _isAscending,
+                      rows: _buildReportRows(filteredReports, context),
+                      showCheckboxColumn: false,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(totalPages, (index) {
+                      return TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                        },
+                        child: Text(
+                          "${index + 1}",
+                          style: TextStyle(
+                            color:
+                                index == _currentPage ? blueColor : blackColor,
+                            fontWeight: index == _currentPage
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ],
-                columns: [
-                  DataColumn(
-                    label: const Text("Report ID"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['docID'] ?? 0,
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Reported By"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['reporterName']?.toString() ?? '',
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Report Description"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) =>
-                            report['reportDescription']?.toString() ?? '',
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Date"),
-                    onSort: (columnIndex, ascending) => _sort<DateTime>(
-                        (report) => (report['timestamp'] as Timestamp).toDate(),
-                        columnIndex,
-                        ascending),
-                  ),
-                ],
-                sortColumnIndex: _sortColumnIndex,
-                sortAscending: _isAscending,
-                source: ReportDataSource(filteredReports, context),
-                rowsPerPage: 10,
-                showCheckboxColumn: false,
-                arrowHeadColor: blueColor,
-                showEmptyRows: true,
-                showFirstLastButtons: true,
               ),
             ),
           ),
@@ -415,69 +471,59 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
       ),
     );
   }
-}
 
-class ReportDataSource extends DataTableSource {
-  final List<Map<String, dynamic>> reports;
-  final BuildContext context;
+  List<DataRow> _buildReportRows(
+      List<Map<String, dynamic>> reports, BuildContext context) {
+    return reports
+        .sublist(
+      _currentPage * _rowsPerPage,
+      min(_currentPage * _rowsPerPage + _rowsPerPage, reports.length),
+    )
+        .map((report) {
+      final int index = reports.indexOf(report);
+      final docID = report['docID'] ?? 'NaN';
+      final reporterName = report['reporterName'] ?? 'Anonymous';
+      final reportDescription = report['reportDescription'] ?? '';
+      final reportedPlateNumber = report['reportedPlateNumber'] ?? '';
+      final timestamp =
+          (report['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
 
-  ReportDataSource(this.reports, this.context);
+      final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
+      final formattedTime = DateFormat('hh:mm a').format(timestamp);
+      final formattedDateTime = '$formattedDate at $formattedTime';
 
-  @override
-  DataRow getRow(int index) {
-    final report = reports[index];
-    final docID = report['docID'] ?? 'NaN';
-    final reporterName = report['reporterName'] ?? 'Anonymous';
-    final reportDescription = report['reportDescription'] ?? '';
-    final reportedPlateNumber = report['reportedPlateNumber'] ?? '';
-    final timestamp =
-        (report['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+      final imageUrl = report['image_url'] ?? '';
 
-    final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
-    final formattedTime = DateFormat('hh:mm a').format(timestamp);
-    final formattedDateTime = '$formattedDate at $formattedTime';
-
-    final imageUrl = report['image_url'] ?? '';
-
-    return DataRow(
-      cells: [
-        // DataCell(Text('${index + 1}')),
-        DataCell(Text(docID)),
-        DataCell(Text(reporterName)),
-        DataCell(Text(reportDescription)),
-        DataCell(Text(formattedDateTime)),
-      ],
-      onSelectChanged: (selected) {
-        if (selected ?? false) {
-          _modal(
-            context,
-            reporterName,
-            reportDescription,
-            reportedPlateNumber,
-            formattedDateTime,
-            imageUrl,
-          );
-        }
-      },
-      color: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.hovered)) {
-            return blackColor.withOpacity(0.05);
+      return DataRow(
+        cells: [
+          DataCell(Text(docID)),
+          DataCell(Text(reporterName)),
+          DataCell(Text(reportDescription)),
+          DataCell(Text(formattedDateTime)),
+        ],
+        onSelectChanged: (selected) {
+          if (selected ?? false) {
+            _modal(
+              context,
+              reporterName,
+              reportDescription,
+              reportedPlateNumber,
+              formattedDateTime,
+              imageUrl,
+            );
           }
-          return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
         },
-      ),
-    );
+        color: WidgetStateProperty.resolveWith<Color>(
+          (Set<WidgetState> states) {
+            if (states.contains(WidgetState.hovered)) {
+              return blackColor.withOpacity(0.05);
+            }
+            return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
+          },
+        ),
+      );
+    }).toList();
   }
-
-  @override
-  int get rowCount => reports.length;
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }
 
 void _modal(BuildContext context, String reporterName, String description,
