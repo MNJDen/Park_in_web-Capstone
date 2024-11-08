@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/theme/transition.dart';
+import 'package:park_in_web/screens/dashboard_main.dart';
 import 'package:park_in_web/screens/report_main.dart';
 import 'package:park_in_web/screens/sign_in_main.dart';
 import 'package:park_in_web/screens/tickets_main.dart';
@@ -53,6 +54,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/sign-in',
       routes: {
         '/sign-in': (context) => const SignInMain(),
+        '/dashboard': (context) => const DashboardMain(),
         '/reports': (context) => const ReportMain(),
         '/tickets-issued': (context) => const TicketsMain(),
         '/view': (context) => const ViewMain(),
