@@ -8,6 +8,7 @@ class PRKSmallCard extends StatefulWidget {
   final Color? color;
   final IconData? icon;
   final VoidCallback? onPressed;
+  final double height;
 
   const PRKSmallCard({
     super.key,
@@ -17,6 +18,7 @@ class PRKSmallCard extends StatefulWidget {
     this.color,
     this.icon,
     this.onPressed,
+    required this.height,
   });
 
   @override
@@ -28,7 +30,7 @@ class _PRKSmallCardState extends State<PRKSmallCard> {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.2,
+        height: widget.height,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: whiteColor,
