@@ -131,7 +131,7 @@ class _PRKUserCardState extends State<PRKUserCard> {
                               style: TextStyle(
                                 color: blackColor,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w300,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
@@ -162,7 +162,7 @@ class _PRKUserCardState extends State<PRKUserCard> {
                               style: TextStyle(
                                 color: blackColor,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w300,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
