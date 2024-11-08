@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/fields/search_field.dart';
@@ -32,6 +33,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
     super.initState();
     _listenForTicketUpdates(); // Fetch data when the screen is initialized
     _searchCtrl.addListener(_applySearchFilter);
+    fetchTotalItems();
   }
 
   @override
@@ -117,6 +119,31 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
     });
   }
 
+  int _currentPage = 0; // Track current page
+  int _rowsPerPage = 10; // Rows per page
+  int _totalItems = 0;
+  bool isLoading = false;
+
+  Future<void> fetchTotalItems() async {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+    try {
+      final querySnapshot =
+          await _firestore.collection('Violation Ticket').get();
+
+      _totalItems = querySnapshot.docs.length;
+    } catch (e) {
+      print('Error fetching total items: $e'); // Print error message
+    } finally {
+      setState(() {
+        isLoading = false; // End loading
+      });
+    }
+  }
+
+  int get totalPages => (_totalItems / _rowsPerPage).ceil();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,24 +151,19 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
       body: ListView(
         children: [
           const NavbarDesktop(),
-          const SizedBox(
-            height: 28,
-          ),
+          const SizedBox(height: 28),
           Container(
             width: MediaQuery.of(context).size.width * 0.9,
-            // height: MediaQuery.of(context).size.height * 0.8,
             margin: EdgeInsets.symmetric(
-              horizontal: MediaQuery.of(context).size.width * 0.1,
-            ),
+                horizontal: MediaQuery.of(context).size.width * 0.1),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: blackColor.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              // boxShadow: [
+              //   BoxShadow(
+              //       color: blackColor.withOpacity(0.05),
+              //       blurRadius: 8,
+              //       offset: const Offset(0, 4))
+              // ],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(
@@ -156,16 +178,17 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                   dataTextStyle: const TextStyle(color: blackColor),
                 ),
               ),
-              child: PaginatedDataTable(
-                header: const Text(
-                  "Tickets Issued",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                    color: blackColor,
+              child: Column(
+                children: [
+                  const Text(
+                    "Violation Tickets",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                      color: blackColor,
+                    ),
                   ),
-                ),
-                actions: [
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 40,
                     width: 170,
@@ -174,59 +197,80 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                         suffixIcon: Icons.search_rounded,
                         controller: _searchCtrl),
                   ),
+                  DataTable(
+                    columns: [
+                      DataColumn(
+                        label: const Text("Ticket ID"),
+                        onSort: (columnIndex, ascending) => _sort<String>(
+                            (report) => report['docID'] ?? 0,
+                            columnIndex,
+                            ascending),
+                      ),
+                      DataColumn(
+                        label: const Text("Ticketed To"),
+                        onSort: (columnIndex, ascending) => _sort<String>(
+                            (report) => report['plate_number'] ?? 0,
+                            columnIndex,
+                            ascending),
+                      ),
+                      DataColumn(
+                        label: const Text("Vehicle Type"),
+                        onSort: (columnIndex, ascending) => _sort<String>(
+                            (report) => report['vehicle_type'] ?? 0,
+                            columnIndex,
+                            ascending),
+                      ),
+                      DataColumn(
+                        label: const Text("Violation"),
+                        onSort: (columnIndex, ascending) => _sort<String>(
+                            (report) => report['violation'] ?? 0,
+                            columnIndex,
+                            ascending),
+                      ),
+                      DataColumn(
+                        label: const Text("Status"),
+                        onSort: (columnIndex, ascending) => _sort<String>(
+                            (report) => report['status'] ?? 0,
+                            columnIndex,
+                            ascending),
+                      ),
+                      DataColumn(
+                        label: const Text("Date"),
+                        onSort: (columnIndex, ascending) => _sort<DateTime>(
+                            (report) =>
+                                (report['timestamp'] as Timestamp).toDate(),
+                            columnIndex,
+                            ascending),
+                      ),
+                    ],
+                    sortColumnIndex: _sortColumnIndex,
+                    sortAscending: _isAscending,
+                    rows: _buildReportRows(filteredTickets, context),
+                    showCheckboxColumn: false,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(totalPages, (index) {
+                      return TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                        },
+                        child: Text(
+                          "${index + 1}",
+                          style: TextStyle(
+                            color:
+                                index == _currentPage ? blueColor : blackColor,
+                            fontWeight: index == _currentPage
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ],
-                columns: [
-                  DataColumn(
-                    label: const Text("Ticket ID"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['docID'] ?? 0,
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Ticketed To"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['plate_number'] ?? 0,
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Vehicle Type"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['vehicle_type'] ?? 0,
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Violation"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['violation'] ?? 0,
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Status"),
-                    onSort: (columnIndex, ascending) => _sort<String>(
-                        (report) => report['status'] ?? 0,
-                        columnIndex,
-                        ascending),
-                  ),
-                  DataColumn(
-                    label: const Text("Date"),
-                    onSort: (columnIndex, ascending) => _sort<DateTime>(
-                        (report) => (report['timestamp'] as Timestamp).toDate(),
-                        columnIndex,
-                        ascending),
-                  ),
-                ],
-                sortColumnIndex: _sortColumnIndex,
-                sortAscending: _isAscending,
-                source: ReportDataSource(filteredTickets, context),
-                rowsPerPage: 10,
-                showCheckboxColumn: false,
-                arrowHeadColor: blueColor,
-                showEmptyRows: true,
-                showFirstLastButtons: true,
               ),
             ),
           ),
@@ -234,106 +278,92 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
       ),
     );
   }
-}
 
-class ReportDataSource extends DataTableSource {
-  final List<Map<String, dynamic>> tickets;
-  final BuildContext context;
+  List<DataRow> _buildReportRows(
+      List<Map<String, dynamic>> tickets, BuildContext context) {
+    return tickets
+        .sublist(
+      _currentPage * _rowsPerPage,
+      min(_currentPage * _rowsPerPage + _rowsPerPage, tickets.length),
+    )
+        .map((ticket) {
+      final int index = tickets.indexOf(ticket);
+      final docID = ticket['docID'] ?? '';
+      final ticketedTo = ticket['plate_number'] ?? '';
+      final vehicleType = ticket['vehicle_type'] ?? '';
+      final violation = ticket['violation'] ?? '';
+      final description = ticket['description'] ?? '';
+      final status = ticket['status'] ?? 'Pending';
+      final timestamp =
+          (ticket['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+      final imageUrl1 = ticket['close_up_image_url'] ?? '';
+      final imageUrl2 = ticket['mid_shot_image_url'] ?? '';
+      final imageUrl3 = ticket['wide_shot_image_url'] ?? '';
 
-  ReportDataSource(this.tickets, this.context);
+      final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
+      final formattedTime = DateFormat('hh:mm a').format(timestamp);
+      final formattedDateTime = '$formattedDate at $formattedTime';
 
-  @override
-  DataRow getRow(int index) {
-    final ticket = tickets[index];
-    final docID = ticket['docID'] ?? '';
-    final ticketedTo = ticket['plate_number'] ?? '';
-    final vehicleType = ticket['vehicle_type'] ?? '';
-    final violation = ticket['violation'] ?? '';
-    final description = ticket['description'] ?? '';
-    final status = ticket['status'] ?? 'Pending';
-    final timestamp =
-        (ticket['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-    final imageUrl1 = ticket['close_up_image_url'] ?? '';
-    final imageUrl2 = ticket['mid_shot_image_url'] ?? '';
-    final imageUrl3 = ticket['wide_shot_image_url'] ?? '';
-
-    final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
-    final formattedTime =
-        DateFormat('hh:mm a').format(timestamp); // 12-hour format
-    final formattedDateTime = '$formattedDate at $formattedTime';
-
-    return DataRow(
-      cells: [
-        // DataCell(Text('${index + 1}')),
-        DataCell(Text(docID)),
-        DataCell(Text(ticketedTo)),
-        DataCell(Text(vehicleType)),
-        DataCell(Text(violation)),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 2,
-            ),
-            decoration: BoxDecoration(
-              color: status == 'Resolved'
-                  ? parkingGreenColor.withOpacity(0.08)
-                  : status == 'Pending'
-                      ? parkingOrangeColor.withOpacity(0.07)
-                      : blackColor,
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                fontWeight: FontWeight.normal,
+      return DataRow(
+        cells: [
+          DataCell(Text(docID)),
+          DataCell(Text(ticketedTo)),
+          DataCell(Text(vehicleType)),
+          DataCell(Text(violation)),
+          DataCell(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
                 color: status == 'Resolved'
-                    ? parkingGreenColor
+                    ? parkingGreenColor.withOpacity(0.08)
                     : status == 'Pending'
-                        ? parkingOrangeColor
+                        ? parkingOrangeColor.withOpacity(0.07)
                         : blackColor,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                status,
+                style: TextStyle(
+                  fontWeight: FontWeight.normal,
+                  color: status == 'Resolved'
+                      ? parkingGreenColor
+                      : status == 'Pending'
+                          ? parkingOrangeColor
+                          : blackColor,
+                ),
               ),
             ),
           ),
-        ),
-        DataCell(Text(formattedDateTime)),
-      ],
-      onSelectChanged: (selected) {
-        if (selected ?? false) {
-          _modal(
-            context,
-            docID,
-            ticketedTo,
-            vehicleType,
-            violation,
-            description,
-            status,
-            formattedDateTime,
-            imageUrl1,
-            imageUrl2,
-            imageUrl3,
-          );
-        }
-      },
-      color: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.hovered)) {
-            return blackColor.withOpacity(0.05);
+          DataCell(Text(formattedDateTime)),
+        ],
+        onSelectChanged: (selected) {
+          if (selected ?? false) {
+            _modal(
+              context,
+              docID,
+              ticketedTo,
+              vehicleType,
+              violation,
+              description,
+              status,
+              formattedDateTime,
+              imageUrl1,
+              imageUrl2,
+              imageUrl3,
+            );
           }
-          return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
         },
-      ),
-    );
+        color: WidgetStateProperty.resolveWith(
+          (states) {
+            if (states.contains(WidgetState.hovered)) {
+              return blackColor.withOpacity(0.05);
+            }
+            return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
+          },
+        ),
+      );
+    }).toList();
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get rowCount => tickets.length;
-
-  @override
-  int get selectedRowCount => 0;
 }
 
 void _modal(
