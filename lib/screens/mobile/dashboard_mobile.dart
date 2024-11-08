@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/navbar/navbar_mobile.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
+import 'package:park_in_web/components/ui/large_card_mobile.dart';
 import 'package:park_in_web/components/ui/primary_btn.dart';
+import 'package:park_in_web/components/ui/small_card_mobile.dart';
+import 'package:park_in_web/components/ui/users_card_mobile.dart';
 import 'package:park_in_web/services/Auth/Auth_Service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -185,6 +188,16 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
                 ],
               ),
             ),
+            ListTile(
+              leading: const Icon(
+                Icons.tv_rounded,
+                color: blackColor,
+              ),
+              title: const Text('View'),
+              onTap: () {
+                _onItemTap('View');
+              },
+            ),
             const Divider(
               thickness: 0.5,
             ),
@@ -200,16 +213,83 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
           ],
         ),
       ),
-      body: ListView(
-        children: [
-          NavbarMobile(
-            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            pageName: pageName,
-          ),
-          const SizedBox(
-            height: 12,
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          children: [
+            NavbarMobile(
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              pageName: pageName,
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+            Expanded(
+              child: Container(
+                height: MediaQuery.of(context).size.height,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: whiteColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: ListView(
+                  children: [
+                    const PRKSmallCardMobile(
+                      label: "Two-Wheels",
+                      content: "48",
+                      sub: "Parking spaces available",
+                      height: 190,
+                      color: parkingGreenColor,
+                      icon: Icons.two_wheeler_rounded,
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    const PRKSmallCardMobile(
+                      label: "Four-Wheels",
+                      content: "36",
+                      sub: "Parking spaces available",
+                      height: 190,
+                      color: parkingYellowColor,
+                      icon: Icons.airport_shuttle_rounded,
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    PRKSmallCardMobile(
+                      label: "Violations",
+                      content: "335",
+                      sub: "Infractions committed",
+                      height: 190,
+                      onPressed: () {},
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    PRKSmallCardMobile(
+                      label: "Reports",
+                      content: "128",
+                      sub: "Received reports",
+                      height: 190,
+                      onPressed: () {},
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    const PRKUserCardMobile(height: 400),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    const PRKLargeCardMobile(height: 750),
+                  ],
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
