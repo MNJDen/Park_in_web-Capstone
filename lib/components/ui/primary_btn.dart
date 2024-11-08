@@ -26,10 +26,11 @@ class _PRKPrimaryBtnState extends State<PRKPrimaryBtn> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        height: 45,
+        height: 52,
         child: TextButton(
           style: TextButton.styleFrom(
-            backgroundColor: _isHovered ? blueColor.withOpacity(0.8) : blueColor,
+            backgroundColor:
+                _isHovered ? blueColor.withOpacity(0.8) : blueColor,
             foregroundColor: whiteColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -39,7 +40,7 @@ class _PRKPrimaryBtnState extends State<PRKPrimaryBtn> {
           child: Text(
             widget.label,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
