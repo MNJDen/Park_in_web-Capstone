@@ -22,7 +22,11 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
     final authService = AuthService();
 
     if (_emailCtrl.text.isEmpty || _passwordCtrl.text.isEmpty) {
-      errorSnackbar(context, "Please fill out all fields.");
+      errorSnackbar(
+        context,
+        "Please fill out all fields.",
+        MediaQuery.of(context).size.width * 0.9,
+      );
       return;
     }
 
@@ -36,11 +40,15 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
       await prefs.setString('userType', 'Admin'); // Store user type
       await prefs.setBool('isLoggedIn', true); // Store login status
 
-      successSnackbar(context, "Sign in successful!");
+      successSnackbar(
+        context,
+        "Sign in successful!",
+        MediaQuery.of(context).size.width * 0.9,
+      );
 
       Navigator.pushNamedAndRemoveUntil(
         context,
-        '/reports',
+        '/dashboard',
         (Route<dynamic> route) => false,
       );
     } catch (e) {
@@ -52,7 +60,11 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
           errorMessage = 'An unknown error occurred. Try again later.';
         }
 
-        errorSnackbar(context, errorMessage);
+        errorSnackbar(
+          context,
+          errorMessage,
+          MediaQuery.of(context).size.width * 0.9,
+        );
       }
     }
   }
@@ -67,95 +79,148 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Positioned(
-                  top: -444,
-                  right: -26,
-                  child: Image.asset(
-                    'assets/images/top.png',
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                Positioned(
-                  bottom: -581,
-                  left: -570,
-                  child: Image.asset(
-                    'assets/images/bot.png',
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                Center(
-                  child: Container(
-                    margin:
-                        EdgeInsets.all(MediaQuery.of(context).size.width * .1),
-                    padding: const EdgeInsets.all(30),
-                    height: 500,
-                    decoration: BoxDecoration(
-                      color: whiteColor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        blueColor,
+                        Color.fromRGBO(27, 29, 148, 1),
                       ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Image.asset(
-                            "assets/images/Logo.png",
-                            width: 40,
-                          ),
+                  ),
+                ),
+                Positioned(
+                  child: Opacity(
+                    opacity: 0.1,
+                    child: Image.asset(
+                      'assets/images/noise.png',
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: -130,
+                  right: -50,
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  left: -80,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: -30,
+                  left: -161,
+                  child: Image.asset(
+                    'assets/images/4-pillars.png',
+                    width: 525,
+                    height: 394,
+                  ),
+                ),
+                Positioned(
+                  top: 50,
+                  right: -100,
+                  child: Transform.flip(
+                    flipX: true,
+                    child: Image.asset(
+                      'assets/images/s1.png',
+                      width: 350,
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.width * .3),
+                  padding: EdgeInsets.symmetric(
+                    vertical: MediaQuery.of(context).size.height * .05,
+                    horizontal: MediaQuery.of(context).size.width * .1,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: whiteColor,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Image.asset(
+                          "assets/images/Logo.png",
+                          width: 35,
                         ),
-                        const SizedBox(
-                          height: 55,
+                      ),
+                      const SizedBox(
+                        height: 120,
+                      ),
+                      const Text(
+                        "Sign In",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const Text(
-                          "Sign In",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      const Text(
+                        "Enter your given credentials",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
                         ),
-                        const Text(
-                          "Enter your given credentials",
+                      ),
+                      const SizedBox(
+                        height: 28,
+                      ),
+                      PRKFormField(
+                        prefixIcon: Icons.alternate_email_rounded,
+                        labelText: "Email Address",
+                        controller: _emailCtrl,
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      PRKFormField(
+                        prefixIcon: Icons.password_rounded,
+                        suffixIcon: Icons.visibility_off_rounded,
+                        labelText: "Password",
+                        controller: _passwordCtrl,
+                        obscureText: true,
+                      ),
+                      const Spacer(),
+                      PRKPrimaryBtn(
+                        label: "Sign In",
+                        onPressed: () {
+                          login(context);
+                          // Navigator.pushNamed(context, '/reports');
+                        },
+                      ),
+                      const SizedBox(
+                        height: 140,
+                      ),
+                      const Center(
+                        child: Text(
+                          "© 2024 Park-in. All Rights Reserved.",
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w400,
+                            fontWeight: FontWeight.w300,
                           ),
                         ),
-                        const SizedBox(
-                          height: 28,
-                        ),
-                        PRKFormField(
-                          prefixIcon: Icons.email_rounded,
-                          labelText: "Email Address",
-                          controller: _emailCtrl,
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        PRKFormField(
-                          prefixIcon: Icons.password_rounded,
-                          suffixIcon: Icons.visibility_off_rounded,
-                          labelText: "Password",
-                          controller: _passwordCtrl,
-                          obscureText: true,
-                        ),
-                        const Spacer(),
-                        PRKPrimaryBtn(
-                          label: "Sign In",
-                          onPressed: () {
-                            login(context);
-                            // Navigator.pushNamed(context, '/reports');
-                          },
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                )
+                ),
               ],
             ),
           ),
