@@ -320,6 +320,16 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                 ],
               ),
             ),
+            ListTile(
+              leading: const Icon(
+                Icons.tv_rounded,
+                color: blackColor,
+              ),
+              title: const Text('View'),
+              onTap: () {
+                _onItemTap('View');
+              },
+            ),
             const Divider(
               thickness: 0.5,
             ),
@@ -335,139 +345,196 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          NavbarMobile(
-            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            pageName: pageName,
-          ),
-          const SizedBox(
-            height: 12,
-          ),
-          Container(
-            margin: EdgeInsets.symmetric(
-              horizontal: MediaQuery.of(context).size.width * .05,
-            ),
-            decoration: BoxDecoration(
-              color: whiteColor,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: blackColor.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                NavbarMobile(
+                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  pageName: pageName,
+                ),
+                SizedBox(
+                  height: 46,
+                  width: 170,
+                  child: PRKSearchField(
+                    hintText: "Search",
+                    prefixIcon: Icons.search_rounded,
+                    controller: _searchCtrl,
+                  ),
                 ),
               ],
             ),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dataTableTheme: DataTableThemeData(
-                  dividerThickness: 0.2,
-                  headingRowColor:
-                      WidgetStateColor.resolveWith((states) => whiteColor),
-                  dataRowColor:
-                      WidgetStateColor.resolveWith((states) => whiteColor),
-                  headingTextStyle: const TextStyle(
-                      color: blackColor, fontWeight: FontWeight.w500),
-                  dataTextStyle: const TextStyle(
-                    color: blackColor,
-                  ),
+            const SizedBox(
+              height: 12,
+            ),
+            Expanded(
+              child: Container(
+                height: MediaQuery.of(context).size.height,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
                 ),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    "Incident Reports",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                      color: blackColor,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 40,
-                    width: 170,
-                    child: PRKSearchField(
-                        hintText: "Search",
-                        suffixIcon: Icons.search_rounded,
-                        controller: _searchCtrl),
-                  ),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columns: [
-                        DataColumn(
-                          label: const Text(
-                            "Report ID",
-                            softWrap: true,
+                decoration: BoxDecoration(
+                  color: whiteColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Incident Reports",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                            color: blackColor,
                           ),
-                          onSort: (columnIndex, ascending) => _sort<String>(
-                              (report) => report['docID'] ?? 0,
-                              columnIndex,
-                              ascending),
-                        ),
-                        DataColumn(
-                          label: const Text("Reported By"),
-                          onSort: (columnIndex, ascending) => _sort<String>(
-                              (report) =>
-                                  report['reporterName']?.toString() ?? '',
-                              columnIndex,
-                              ascending),
-                        ),
-                        DataColumn(
-                          label: const Text("Report Description"),
-                          onSort: (columnIndex, ascending) => _sort<String>(
-                              (report) =>
-                                  report['reportDescription']?.toString() ?? '',
-                              columnIndex,
-                              ascending),
-                        ),
-                        DataColumn(
-                          label: const Text("Date"),
-                          onSort: (columnIndex, ascending) => _sort<DateTime>(
-                              (report) =>
-                                  (report['timestamp'] as Timestamp).toDate(),
-                              columnIndex,
-                              ascending),
                         ),
                       ],
-                      sortColumnIndex: _sortColumnIndex,
-                      sortAscending: _isAscending,
-                      rows: _buildReportRows(filteredReports, context),
-                      showCheckboxColumn: false,
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(totalPages, (index) {
-                      return TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentPage = index;
-                          });
-                        },
-                        child: Text(
-                          "${index + 1}",
-                          style: TextStyle(
-                            color:
-                                index == _currentPage ? blueColor : blackColor,
-                            fontWeight: index == _currentPage
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        dataTableTheme: DataTableThemeData(
+                          dividerThickness: 0.2,
+                          headingRowColor: WidgetStateColor.resolveWith(
+                              (states) => whiteColor),
+                          dataRowColor: WidgetStateColor.resolveWith(
+                              (states) => whiteColor),
+                          headingTextStyle: const TextStyle(
+                              color: blackColor, fontWeight: FontWeight.w500),
+                          dataTextStyle: const TextStyle(
+                            color: blackColor,
                           ),
                         ),
-                      );
-                    }),
-                  ),
-                ],
+                      ),
+                      child: Column(
+                        children: [
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              columns: [
+                                DataColumn(
+                                  label: const Text(
+                                    "Report ID",
+                                    softWrap: true,
+                                  ),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>(
+                                          (report) => report['docID'] ?? 0,
+                                          columnIndex,
+                                          ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Reported By"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>(
+                                          (report) =>
+                                              report['reporterName']
+                                                  ?.toString() ??
+                                              '',
+                                          columnIndex,
+                                          ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Report Description"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>(
+                                          (report) =>
+                                              report['reportDescription']
+                                                  ?.toString() ??
+                                              '',
+                                          columnIndex,
+                                          ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Date"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<DateTime>(
+                                          (report) =>
+                                              (report['timestamp'] as Timestamp)
+                                                  .toDate(),
+                                          columnIndex,
+                                          ascending),
+                                ),
+                              ],
+                              dataRowMinHeight:
+                                  MediaQuery.of(context).size.height * 0.02,
+                              dataRowMaxHeight:
+                                  MediaQuery.of(context).size.height * 0.066,
+                              sortColumnIndex: _sortColumnIndex,
+                              sortAscending: _isAscending,
+                              rows: _buildReportRows(filteredReports, context),
+                              showCheckboxColumn: false,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.end,
+                      children: List.generate(
+                        totalPages,
+                        (index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: TextButton(
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStatePropertyAll(
+                                  index == _currentPage
+                                      ? blueColor
+                                      : whiteColor,
+                                ),
+                                shape: WidgetStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(
+                                      color: index == _currentPage
+                                          ? Colors.transparent
+                                          : blueColor,
+                                    ),
+                                  ),
+                                ),
+                                fixedSize: WidgetStateProperty.all(
+                                  const Size(30, 40),
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _currentPage = index;
+                                });
+                              },
+                              child: Text(
+                                "${index + 1}",
+                                style: TextStyle(
+                                  color: index == _currentPage
+                                      ? whiteColor
+                                      : blueColor,
+                                  fontWeight: index == _currentPage
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(
-            height: 28,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
