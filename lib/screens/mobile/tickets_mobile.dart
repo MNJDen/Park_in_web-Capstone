@@ -223,7 +223,9 @@ class _TicketsMobileScreenState extends State<TicketsMobileScreen> {
   @override
   Widget build(BuildContext context) {
     String pageName;
-    if (_selectedPage == '/reports') {
+    if (_selectedPage == '/dashboard') {
+      pageName = 'Dashboard';
+    } else if (_selectedPage == '/reports') {
       pageName = 'Reports';
     } else if (_selectedPage == '/tickets-issued') {
       pageName = 'Tickets Issued';
@@ -259,6 +261,16 @@ class _TicketsMobileScreenState extends State<TicketsMobileScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 padding: EdgeInsets.zero,
                 children: <Widget>[
+                  ListTile(
+                    leading: const Icon(
+                      Icons.dashboard_outlined,
+                      color: blackColor,
+                    ),
+                    title: const Text('Dashboard'),
+                    onTap: () {
+                      _onItemTap('Dashboard');
+                    },
+                  ),
                   ListTile(
                     leading: const Icon(
                       Icons.flag_outlined,
