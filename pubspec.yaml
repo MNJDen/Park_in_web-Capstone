@@ -71,6 +71,10 @@ flutter:
         - asset: assets/fonts/GeneralSans-LightItalic.otf
           style: italic
           weight: 300
+    - family: Hiruko Pro
+      fonts:
+          - asset: assets/fonts/HirukoPro-Regular.otf
+            weight: 400
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
