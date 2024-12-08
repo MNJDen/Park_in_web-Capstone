@@ -1,3 +1,5 @@
+import 'package:firebase_database/firebase_database.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
@@ -14,6 +16,85 @@ class PRKLargeCardMobile extends StatefulWidget {
 }
 
 class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
+  final DatabaseReference _database =
+      FirebaseDatabase.instance.ref("parkingAreas");
+
+  Map<String, int> studentParkingData = {};
+  final List<String> allowedStudentParkingSpaces = [
+    "Alingal A",
+    "Alingal B",
+    "Burns",
+    "Coko Cafe",
+    "Covered Court",
+    "Library",
+  ];
+
+  Map<String, int> employeeParkingData = {};
+  final List<String> allowedEmployeeSpaces = [
+    "Alingal",
+    "Phelan",
+  ];
+
+  Map<String, int> twoWheelsParkingData = {};
+  final List<String> allowedTwoWheelsSpaces = [
+    "Alingal (M)",
+    "Dolan (M)",
+    "Library (M)",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudentParkingData();
+    _fetchEmployeeParkingData();
+    _fetchTwoWheelsParkingData();
+  }
+
+  Future<void> _fetchStudentParkingData() async {
+    _database.onValue.listen((event) {
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final Map<String, int> filteredData = {};
+      for (var entry in data.entries) {
+        if (allowedStudentParkingSpaces.contains(entry.key)) {
+          filteredData[entry.key] = entry.value['count'] as int;
+        }
+      }
+      setState(() {
+        studentParkingData = filteredData;
+      });
+    });
+  }
+
+  Future<void> _fetchEmployeeParkingData() async {
+    _database.onValue.listen((event) {
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final Map<String, int> filteredData = {};
+      for (var entry in data.entries) {
+        if (allowedEmployeeSpaces.contains(entry.key)) {
+          filteredData[entry.key] = entry.value['count'] as int;
+        }
+      }
+      setState(() {
+        employeeParkingData = filteredData;
+      });
+    });
+  }
+
+  Future<void> _fetchTwoWheelsParkingData() async {
+    _database.onValue.listen((event) {
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final Map<String, int> filteredData = {};
+      for (var entry in data.entries) {
+        if (allowedTwoWheelsSpaces.contains(entry.key)) {
+          filteredData[entry.key] = entry.value['count'] as int;
+        }
+      }
+      setState(() {
+        twoWheelsParkingData = filteredData;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -101,8 +182,58 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                     )
                   ],
                 ),
-                const Center(
-                  child: Text("Bar Graph"),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: studentParkingData.isNotEmpty
+                      ? BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            barGroups: studentParkingData.entries.map((entry) {
+                              return BarChartGroupData(
+                                x: studentParkingData.keys
+                                    .toList()
+                                    .indexOf(entry.key),
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: entry.value.toDouble(),
+                                    width: 16,
+                                    color: const Color.fromARGB(
+                                        234, 155, 154, 255),
+                                    borderRadius: BorderRadius.circular(4),
+                                  )
+                                ],
+                              );
+                            }).toList(),
+                            titlesData: FlTitlesData(
+                              leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index >= 0 &&
+                                        index <
+                                            studentParkingData.keys.length) {
+                                      return Text(
+                                        studentParkingData.keys
+                                            .elementAt(index),
+                                        style: const TextStyle(fontSize: 5),
+                                      );
+                                    }
+                                    return const Text('');
+                                  },
+                                ),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                          ),
+                        )
+                      : const Center(child: CircularProgressIndicator()),
                 ),
               ],
             ),
@@ -146,8 +277,58 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                     )
                   ],
                 ),
-                const Center(
-                  child: Text("Bar Graph"),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: employeeParkingData.isNotEmpty
+                      ? BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            barGroups: employeeParkingData.entries.map((entry) {
+                              return BarChartGroupData(
+                                x: employeeParkingData.keys
+                                    .toList()
+                                    .indexOf(entry.key),
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: entry.value.toDouble(),
+                                    width: 16,
+                                    color: const Color.fromARGB(
+                                        234, 155, 154, 255),
+                                    borderRadius: BorderRadius.circular(4),
+                                  )
+                                ],
+                              );
+                            }).toList(),
+                            titlesData: FlTitlesData(
+                              leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index >= 0 &&
+                                        index <
+                                            employeeParkingData.keys.length) {
+                                      return Text(
+                                        employeeParkingData.keys
+                                            .elementAt(index),
+                                        style: const TextStyle(fontSize: 10),
+                                      );
+                                    }
+                                    return const Text('');
+                                  },
+                                ),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                          ),
+                        )
+                      : const Center(child: CircularProgressIndicator()),
                 ),
               ],
             ),
@@ -191,8 +372,59 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                     )
                   ],
                 ),
-                const Center(
-                  child: Text("Bar Graph"),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: twoWheelsParkingData.isNotEmpty
+                      ? BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            barGroups:
+                                twoWheelsParkingData.entries.map((entry) {
+                              return BarChartGroupData(
+                                x: twoWheelsParkingData.keys
+                                    .toList()
+                                    .indexOf(entry.key),
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: entry.value.toDouble(),
+                                    width: 16,
+                                    color: const Color.fromARGB(
+                                        234, 155, 154, 255),
+                                    borderRadius: BorderRadius.circular(4),
+                                  )
+                                ],
+                              );
+                            }).toList(),
+                            titlesData: FlTitlesData(
+                              leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index >= 0 &&
+                                        index <
+                                            twoWheelsParkingData.keys.length) {
+                                      return Text(
+                                        twoWheelsParkingData.keys
+                                            .elementAt(index),
+                                        style: const TextStyle(fontSize: 10),
+                                      );
+                                    }
+                                    return const Text('');
+                                  },
+                                ),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                          ),
+                        )
+                      : const Center(child: CircularProgressIndicator()),
                 ),
               ],
             ),
