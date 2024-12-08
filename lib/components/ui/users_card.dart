@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class PRKUserCard extends StatefulWidget {
   const PRKUserCard({
@@ -11,8 +13,42 @@ class PRKUserCard extends StatefulWidget {
 }
 
 class _PRKUserCardState extends State<PRKUserCard> {
+  int studentCount = 0;
+  int employeeCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    listenToUserCounts();
+  }
+
+  void listenToUserCounts() {
+    FirebaseFirestore.instance
+        .collection('User')
+        .where('userType', whereIn: ['Student', 'Employee'])
+        .snapshots()
+        .listen((snapshot) {
+          int students = 0;
+          int employees = 0;
+
+          for (var doc in snapshot.docs) {
+            if (doc['userType'] == 'Student') {
+              students++;
+            } else if (doc['userType'] == 'Employee') {
+              employees++;
+            }
+          }
+
+          setState(() {
+            studentCount = students;
+            employeeCount = employees;
+          });
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
+    int totalUsers = studentCount + employeeCount;
     return Expanded(
       child: Container(
         height: MediaQuery.of(context).size.height * 0.33,
@@ -67,25 +103,53 @@ class _PRKUserCardState extends State<PRKUserCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Container(
+                // Pie Chart
+                SizedBox(
                   height: 200,
                   width: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: blueColor.withOpacity(0.1),
-                  ),
-                  child: const Center(
-                    child: Text("Pie Graph"),
+                  child: PieChart(
+                    PieChartData(
+                      sections: [
+                        PieChartSectionData(
+                          color: blueColor,
+                          value: studentCount.toDouble(),
+                          title:
+                              '${((studentCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                          radius: 50,
+                          titleStyle: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: whiteColor,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          color: yellowColor,
+                          value: employeeCount.toDouble(),
+                          title:
+                              '${((employeeCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                          radius: 50,
+                          titleStyle: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: blackColor,
+                          ),
+                        ),
+                      ],
+                      sectionsSpace: 4, // Spacing between slices
+                      centerSpaceRadius:
+                          40, // Space at the center of the pie chart
+                    ),
                   ),
                 ),
+                // Text and Stats Column
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Wrap(
+                    Wrap(
                       direction: Axis.vertical,
                       children: [
                         Text(
-                          "768",
+                          "${studentCount + employeeCount}",
                           style: TextStyle(
                             color: blackColor,
                             fontSize: 48,
@@ -112,19 +176,13 @@ class _PRKUserCardState extends State<PRKUserCard> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 12,
                           children: [
-                            Wrap(
-                              children: [
-                                Container(
-                                  height: 11,
-                                  width: 20,
-                                  decoration: BoxDecoration(
-                                    color: blueColor,
-                                    borderRadius: BorderRadius.circular(
-                                      10,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            Container(
+                              height: 11,
+                              width: 20,
+                              decoration: BoxDecoration(
+                                color: blueColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                             const Text(
                               "Student",
@@ -143,19 +201,13 @@ class _PRKUserCardState extends State<PRKUserCard> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 12,
                           children: [
-                            Wrap(
-                              children: [
-                                Container(
-                                  height: 11,
-                                  width: 20,
-                                  decoration: BoxDecoration(
-                                    color: yellowColor,
-                                    borderRadius: BorderRadius.circular(
-                                      10,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            Container(
+                              height: 11,
+                              width: 20,
+                              decoration: BoxDecoration(
+                                color: yellowColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                             const Text(
                               "Employee",
@@ -168,9 +220,9 @@ class _PRKUserCardState extends State<PRKUserCard> {
                           ],
                         ),
                       ],
-                    )
+                    ),
                   ],
-                )
+                ),
               ],
             )
           ],
