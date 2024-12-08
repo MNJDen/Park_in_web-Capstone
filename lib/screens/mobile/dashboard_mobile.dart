@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/navbar/navbar_mobile.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
@@ -113,6 +114,33 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
         );
       },
     );
+  }
+
+  final DatabaseReference _database =
+      FirebaseDatabase.instance.ref("parkingAreas");
+  final CollectionReference _violationTickets =
+      FirebaseFirestore.instance.collection("Violation Ticket");
+  final CollectionReference _incidentReports =
+      FirebaseFirestore.instance.collection("Incident Report");
+
+  Map<String, int> _calculateCounts(Map<dynamic, dynamic> data) {
+    int tempTwoWheelsCount = 0;
+    int tempFourWheelsCount = 0;
+
+    data.forEach((key, value) {
+      final int count = (value['count'] ?? 0) as int;
+
+      if (key == "Dolan (M)" || key == "Library (M)" || key == "Alingal (M)") {
+        tempTwoWheelsCount += count;
+      } else {
+        tempFourWheelsCount += count;
+      }
+    });
+
+    return {
+      'twoWheelsCount': tempTwoWheelsCount,
+      'fourWheelsCount': tempFourWheelsCount,
+    };
   }
 
   Widget build(BuildContext context) {
@@ -235,56 +263,120 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
                   color: whiteColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: ListView(
-                  children: [
-                    const PRKSmallCardMobile(
-                      label: "Two-Wheels",
-                      content: "48",
-                      sub: "Parking spaces available",
-                      height: 190,
-                      color: parkingGreenColor,
-                      icon: Icons.two_wheeler_rounded,
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    const PRKSmallCardMobile(
-                      label: "Four-Wheels",
-                      content: "36",
-                      sub: "Parking spaces available",
-                      height: 190,
-                      color: parkingYellowColor,
-                      icon: Icons.airport_shuttle_rounded,
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    PRKSmallCardMobile(
-                      label: "Violations",
-                      content: "335",
-                      sub: "Infractions committed",
-                      height: 190,
-                      onPressed: () {},
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    PRKSmallCardMobile(
-                      label: "Reports",
-                      content: "128",
-                      sub: "Received reports",
-                      height: 190,
-                      onPressed: () {},
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    const PRKUserCardMobile(height: 400),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    const PRKLargeCardMobile(height: 750),
-                  ],
+                child: StreamBuilder(
+                  stream: _database.onValue,
+                  builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+                    if (snapshot.hasData &&
+                        snapshot.data!.snapshot.value != null) {
+                      final data = snapshot.data!.snapshot.value
+                          as Map<dynamic, dynamic>;
+                      final counts = _calculateCounts(data);
+
+                      return ListView(
+                        children: [
+                          PRKSmallCardMobile(
+                            label: "Two-Wheels",
+                            content: "${counts['twoWheelsCount']}",
+                            sub: "Parking spaces available",
+                            height: 190,
+                            color: parkingGreenColor,
+                            icon: Icons.two_wheeler_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          PRKSmallCardMobile(
+                            label: "Four-Wheels",
+                            content: "${counts['fourWheelsCount']}",
+                            sub: "Parking spaces available",
+                            height: 190,
+                            color: parkingYellowColor,
+                            icon: Icons.airport_shuttle_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          StreamBuilder<QuerySnapshot>(
+                            stream: _violationTickets.snapshots(),
+                            builder: (context,
+                                AsyncSnapshot<QuerySnapshot> ticketSnapshot) {
+                              int violationCount = 0;
+                              if (ticketSnapshot.hasData) {
+                                violationCount = ticketSnapshot.data!.size;
+                              }
+                              return PRKSmallCardMobile(
+                                label: "Violations",
+                                content: "$violationCount",
+                                sub: "Infractions committed",
+                                height: 190,
+                                onPressed: () {},
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          StreamBuilder<QuerySnapshot>(
+                            stream: _incidentReports.snapshots(),
+                            builder: (context,
+                                AsyncSnapshot<QuerySnapshot> reportSnapshot) {
+                              int reportCount = 0;
+                              if (reportSnapshot.hasData) {
+                                reportCount = reportSnapshot.data!.size;
+                              }
+                              return PRKSmallCardMobile(
+                                label: "Reports",
+                                content: "$reportCount",
+                                sub: "Received reports",
+                                height: 190,
+                                onPressed: () {},
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          const PRKUserCardMobile(height: 400),
+                          const SizedBox(height: 16),
+                          const PRKLargeCardMobile(height: 750),
+                        ],
+                      );
+                    } else {
+                      return ListView(
+                        children: [
+                          PRKSmallCardMobile(
+                            label: "Two-Wheels",
+                            content: "Loading...",
+                            sub: "Parking spaces available",
+                            height: 190,
+                            color: parkingGreenColor,
+                            icon: Icons.two_wheeler_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          PRKSmallCardMobile(
+                            label: "Four-Wheels",
+                            content: "Loading...",
+                            sub: "Parking spaces available",
+                            height: 190,
+                            color: parkingYellowColor,
+                            icon: Icons.airport_shuttle_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          PRKSmallCardMobile(
+                            label: "Violations",
+                            content: "Loading...",
+                            sub: "Infractions committed",
+                            height: 190,
+                            onPressed: () {},
+                          ),
+                          const SizedBox(height: 16),
+                          PRKSmallCardMobile(
+                            label: "Reports",
+                            content: "Loading...",
+                            sub: "Received reports",
+                            height: 190,
+                            onPressed: () {},
+                          ),
+                          const SizedBox(height: 16),
+                          const PRKUserCardMobile(height: 400),
+                          const SizedBox(height: 16),
+                          const PRKLargeCardMobile(height: 750),
+                        ],
+                      );
+                    }
+                  },
                 ),
               ),
             )
