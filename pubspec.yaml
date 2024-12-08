@@ -35,6 +35,10 @@ dependencies:
   intl: ^0.19.0
   firebase_database: ^11.1.4
   shimmer: ^3.0.0
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  google_fonts: ^6.2.1
+  fl_chart: ^0.69.2
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +56,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/adnu_logo.png
 
   fonts:
     - family: General Sans
@@ -75,6 +80,12 @@ flutter:
       fonts:
           - asset: assets/fonts/HirukoPro-Regular.otf
             weight: 400
+    - family: NotoSans
+      fonts:
+          - asset: assets/fonts/NotoSans-Regular.ttf
+            weight: 400
+          - asset: assets/fonts/NotoSans-Bold.ttf
+            weight: 700
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
