@@ -1,11 +1,21 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
 import 'package:shimmer/shimmer.dart';
+import 'dart:convert';
+import 'dart:html' as html;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 class TicketsDesktopScreen extends StatefulWidget {
   const TicketsDesktopScreen({super.key});
@@ -34,6 +44,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
     _listenForTicketUpdates(); // Fetch data when the screen is initialized
     _searchCtrl.addListener(_applySearchFilter);
     fetchTotalItems();
+    preloadAssets();
   }
 
   @override
@@ -142,7 +153,171 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
     }
   }
 
+  late pw.MemoryImage logoImage;
+
+  Future<void> preloadAssets() async {
+    final ByteData imageData =
+        await rootBundle.load('assets/images/adnu_logo.png');
+    logoImage = pw.MemoryImage(imageData.buffer.asUint8List());
+  }
+
   int get totalPages => (_totalItems / _rowsPerPage).ceil();
+
+  Future<void> saveDataTableToPDF(
+      List<Map<String, dynamic>> data, String fileName) async {
+    final tableRows = data.map((item) {
+      return [
+        item['docID'] ?? '',
+        item['plate_number'] ?? '',
+        item['vehicle_type'] ?? '',
+        item['violation'] ?? '',
+        item['status'] ?? '',
+        (item['timestamp'] != null && item['timestamp'] is Timestamp)
+            ? DateFormat('dd MMM yyyy, HH:mm')
+                .format(item['timestamp'].toDate())
+            : 'N/A',
+      ];
+    }).toList();
+
+    final pdf = pw.Document();
+    final now = DateTime.now();
+    final formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(now);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          orientation: pw.PageOrientation.landscape,
+          pageFormat: PdfPageFormat.legal.landscape,
+        ),
+        build: (context) => [
+          // Header
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            children: [
+              // Image on the left
+              pw.Image(
+                logoImage,
+                width: 50,
+                height: 50,
+                fit: pw.BoxFit.contain,
+              ),
+              pw.SizedBox(width: 10),
+
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Ateneo de Naga University',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    'Administrative Office',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                  pw.Text(
+                    'Ateneo Ave, Naga, 4400 Camarines Sur',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          pw.Divider(),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                fileName,
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.Text(
+                '  as of $formattedDate',
+                style: pw.TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          pw.Table(
+            border: pw.TableBorder.all(
+              width: 1.0,
+              color: PdfColor.fromInt(0xFF9E9E9E),
+            ),
+            children: [
+              // Header row
+              pw.TableRow(
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text('Ticket ID',
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text('Ticketed To',
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text('Vehicle Type',
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text('Violation',
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text('Status',
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text('Date',
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ),
+                ],
+              ),
+              // Data rows
+              for (final row in tableRows)
+                pw.TableRow(
+                  children: row
+                      .map((cell) => pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(cell.toString(),
+                                style: pw.TextStyle(fontSize: 10)),
+                          ))
+                      .toList(),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    // Preview the PDF before downloading
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,6 +352,13 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                             fontSize: 24,
                             color: blackColor,
                           ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await saveDataTableToPDF(
+                                filteredTickets, 'Violation Tickets');
+                          },
+                          child: const Text("Save to PDF"),
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
