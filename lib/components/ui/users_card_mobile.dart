@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
@@ -14,6 +16,39 @@ class PRKUserCardMobile extends StatefulWidget {
 }
 
 class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
+  int studentCount = 0;
+  int employeeCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    listenToUserCounts();
+  }
+
+  void listenToUserCounts() {
+    FirebaseFirestore.instance
+        .collection('User')
+        .where('userType', whereIn: ['Student', 'Employee'])
+        .snapshots()
+        .listen((snapshot) {
+          int students = 0;
+          int employees = 0;
+
+          for (var doc in snapshot.docs) {
+            if (doc['userType'] == 'Student') {
+              students++;
+            } else if (doc['userType'] == 'Employee') {
+              employees++;
+            }
+          }
+
+          setState(() {
+            studentCount = students;
+            employeeCount = employees;
+          });
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -74,8 +109,37 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
                 shape: BoxShape.circle,
                 color: blueColor.withOpacity(0.1),
               ),
-              child: const Center(
-                child: Text("Pie Graph"),
+              child: PieChart(
+                PieChartData(
+                  sections: [
+                    PieChartSectionData(
+                      color: blueColor,
+                      value: studentCount.toDouble(),
+                      title:
+                          '${((studentCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                      radius: 50,
+                      titleStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: whiteColor,
+                      ),
+                    ),
+                    PieChartSectionData(
+                      color: yellowColor,
+                      value: employeeCount.toDouble(),
+                      title:
+                          '${((employeeCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                      radius: 50,
+                      titleStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: blackColor,
+                      ),
+                    ),
+                  ],
+                  sectionsSpace: 4, // Spacing between slices
+                  centerSpaceRadius: 40, // Space at the center of the pie chart
+                ),
               ),
             ),
           ),
@@ -83,11 +147,11 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "768",
+                    "${studentCount + employeeCount}",
                     style: TextStyle(
                       color: blackColor,
                       fontSize: 48,
