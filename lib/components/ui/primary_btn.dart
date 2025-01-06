@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
 class PRKPrimaryBtn extends StatefulWidget {
   final String label;
   final VoidCallback onPressed;
+  final bool? isLoading;
 
   const PRKPrimaryBtn({
     super.key,
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -37,13 +40,22 @@ class _PRKPrimaryBtnState extends State<PRKPrimaryBtn> {
             ),
           ),
           onPressed: widget.onPressed,
-          child: Text(
-            widget.label,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          child: widget.isLoading!
+              ? SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: LoadingAnimationWidget.waveDots(
+                    color: whiteColor,
+                    size: 30,
+                  ),
+                )
+              : Text(
+                  widget.label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
         ),
       ),
     );
