@@ -139,6 +139,12 @@ class _TicketsMobileScreenState extends State<TicketsMobileScreen> {
             .where((ticket) => ticket['status'] == 'Pending')
             .toList();
       }
+
+      // set the number of total items to the length of filtered tickets
+      _totalItems = filteredTickets.length;
+
+      // reset current page para dae mag out of bounds
+      _currentPage = 0;
     });
   }
 
@@ -1434,7 +1440,7 @@ void _confirmResolveModal(BuildContext context, String docID) async {
       },
     );
     Navigator.of(context).pop();
-     successSnackbar(
+    successSnackbar(
         context, "Ticket Resolved!", MediaQuery.of(context).size.width * 0.9);
   }
 }
@@ -1534,8 +1540,8 @@ class HoverableImage extends StatefulWidget {
 
 class _HoverableImageState extends State<HoverableImage> {
   bool _isHovered = false;
-  bool _isLoading = true; 
-  double _opacity = 0.0; 
+  bool _isLoading = true;
+  double _opacity = 0.0;
   bool _hasError = false;
 
   @override
