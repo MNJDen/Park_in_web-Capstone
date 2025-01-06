@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
 class PRKUserCardMobile extends StatefulWidget {
@@ -102,13 +103,9 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
             height: 16,
           ),
           Center(
-            child: Container(
+            child: SizedBox(
               height: 200,
               width: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: blueColor.withOpacity(0.1),
-              ),
               child: PieChart(
                 PieChartData(
                   sections: [
@@ -116,9 +113,9 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
                       color: blueColor,
                       value: studentCount.toDouble(),
                       title:
-                          '${((studentCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                          '$studentCount',
                       radius: 50,
-                      titleStyle: TextStyle(
+                      titleStyle: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: whiteColor,
@@ -128,9 +125,9 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
                       color: yellowColor,
                       value: employeeCount.toDouble(),
                       title:
-                          '${((employeeCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                          '$employeeCount',
                       radius: 50,
-                      titleStyle: TextStyle(
+                      titleStyle: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: blackColor,
@@ -149,16 +146,17 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "${studentCount + employeeCount}",
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: blackColor,
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  Text(
+                  ).animate().fade(delay: const Duration(milliseconds: 350)),
+                  const Text(
                     "Total users using the app ",
                     style: TextStyle(
                       color: blackColor,
@@ -170,6 +168,7 @@ class _PRKUserCardMobileState extends State<PRKUserCardMobile> {
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Wrap(
                     spacing: 12,
