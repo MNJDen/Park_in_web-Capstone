@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -113,31 +114,30 @@ class _PRKUserCardState extends State<PRKUserCard> {
                         PieChartSectionData(
                           color: blueColor,
                           value: studentCount.toDouble(),
-                          title:
-                              '${((studentCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
+                          title: '$studentCount',
                           radius: 50,
-                          titleStyle: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: whiteColor,
-                          ),
-                        ),
-                        PieChartSectionData(
-                          color: yellowColor,
-                          value: employeeCount.toDouble(),
-                          title:
-                              '${((employeeCount / (studentCount + employeeCount)) * 100).toStringAsFixed(1)}%',
-                          radius: 50,
-                          titleStyle: TextStyle(
+                          titleStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: blackColor,
                           ),
+                          titlePositionPercentageOffset: 1.35,
+                        ),
+                        PieChartSectionData(
+                          color: yellowColor,
+                          value: employeeCount.toDouble(),
+                          title: '$employeeCount',
+                          radius: 50,
+                          titleStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: blackColor,
+                          ),
+                          titlePositionPercentageOffset: 1.35,
                         ),
                       ],
-                      sectionsSpace: 4, // Spacing between slices
-                      centerSpaceRadius:
-                          40, // Space at the center of the pie chart
+                      sectionsSpace: 4,
+                      centerSpaceRadius: 40,
                     ),
                   ),
                 ),
@@ -150,13 +150,15 @@ class _PRKUserCardState extends State<PRKUserCard> {
                       children: [
                         Text(
                           "${studentCount + employeeCount}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: blackColor,
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
-                        Text(
+                        )
+                            .animate()
+                            .fade(delay: const Duration(milliseconds: 350)),
+                        const Text(
                           "Total users using the app ",
                           style: TextStyle(
                             color: blackColor,
