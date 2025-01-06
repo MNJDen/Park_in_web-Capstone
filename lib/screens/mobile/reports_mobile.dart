@@ -3,17 +3,20 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_mobile.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
+import 'package:park_in_web/components/ui/icon_btn.dart';
 import 'package:park_in_web/components/ui/primary_btn.dart';
 import 'package:park_in_web/services/Auth/Auth_Service.dart';
 import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'dart:html' as html;
 
 class ReportsMobileScreen extends StatefulWidget {
   const ReportsMobileScreen({super.key});
@@ -36,6 +39,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
   // Tracking sorted column and sort order (ascending/descending)
   int _sortColumnIndex = 0;
   bool _isAscending = true;
+  bool isExporting = false;
 
   @override
   void initState() {
@@ -61,6 +65,8 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
           reportData['docID'] = doc.id;
           return reportData;
         }).toList();
+
+        _totalItems = reports.length;
 
         // Sorting tickets by timestamp
         reports.sort((a, b) {
@@ -309,13 +315,13 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                   ),
                   pw.Text(
                     'Administrative Office',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 12,
                     ),
                   ),
                   pw.Text(
                     'Ateneo Ave, Naga, 4400 Camarines Sur',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 12,
                     ),
                   ),
@@ -337,7 +343,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
               ),
               pw.Text(
                 '  as of $formattedDate',
-                style: pw.TextStyle(fontSize: 12),
+                style: const pw.TextStyle(fontSize: 12),
               ),
             ],
           ),
@@ -345,7 +351,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
           pw.Table(
             border: pw.TableBorder.all(
               width: 1.0,
-              color: PdfColor.fromInt(0xFF9E9E9E),
+              color: const PdfColor.fromInt(0xFF9E9E9E),
             ),
             children: [
               // Header row
@@ -384,7 +390,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                       .map((cell) => pw.Padding(
                             padding: const pw.EdgeInsets.all(5),
                             child: pw.Text(cell.toString(),
-                                style: pw.TextStyle(fontSize: 10)),
+                                style: const pw.TextStyle(fontSize: 10)),
                           ))
                       .toList(),
                 ),
@@ -395,35 +401,24 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
     );
 
     // Preview the PDF before downloading
-    // await Printing.layoutPdf(
-    //   onLayout: (PdfPageFormat format) async => pdf.save(),
-    // );
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
 
     //Download the PDF
-    final bytes = await pdf.save();
-    final blob = html.Blob([bytes], 'application/pdf');
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.document.createElement('a') as html.AnchorElement
-      ..href = url
-      ..style.display = 'none'
-      ..download = '$fileName.pdf';
-    html.document.body?.children.add(anchor);
-    anchor.click();
+    // final bytes = await pdf.save();
+    // final blob = html.Blob([bytes], 'application/pdf');
+    // final url = html.Url.createObjectUrlFromBlob(blob);
+    // final anchor = html.document.createElement('a') as html.AnchorElement
+    //   ..href = url
+    //   ..style.display = 'none'
+    //   ..download = '$fileName.pdf';
+    // html.document.body?.children.add(anchor);
+    // anchor.click();
   }
 
   @override
   Widget build(BuildContext context) {
-    String pageName;
-    if (_selectedPage == '/dashboard') {
-      pageName = 'Dashboard';
-    } else if (_selectedPage == '/reports') {
-      pageName = 'Reports';
-    } else if (_selectedPage == '/tickets-issued') {
-      pageName = 'Tickets Issued';
-    } else {
-      pageName = '';
-    }
-
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: bgColor,
@@ -490,7 +485,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                 Icons.tv_rounded,
                 color: blackColor,
               ),
-              title: const Text('View'),
+              title: const Text('Live View'),
               onTap: () {
                 _onItemTap('View');
               },
@@ -512,66 +507,180 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: ListView(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                NavbarMobile(
-                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                  pageName: pageName,
-                ),
-                SizedBox(
-                  height: 46,
-                  width: 170,
-                  child: PRKSearchField(
-                    hintText: "Search",
-                    prefixIcon: Icons.search_rounded,
-                    controller: _searchCtrl,
-                  ),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    NavbarMobile(
+                      onMenuPressed: () =>
+                          _scaffoldKey.currentState?.openDrawer(),
+                    ),
+                    const Text(
+                      "Incident Reports",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: whiteColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+            SizedBox(
+              height: 46,
+              width: double.infinity,
+              child: PRKSearchField(
+                hintText: "Search",
+                prefixIcon: Icons.search_rounded,
+                controller: _searchCtrl,
+              ),
+            )
+                .animate()
+                .fade(
+                  delay: const Duration(
+                    milliseconds: 100,
+                  ),
+                )
+                .moveY(
+                  begin: 10,
+                  end: 0,
+                  curve: Curves.fastEaseInToSlowEaseOut,
+                  duration: const Duration(milliseconds: 250),
+                ),
             const SizedBox(
               height: 12,
             ),
-            Expanded(
-              child: Container(
-                height: MediaQuery.of(context).size.height,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: whiteColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Incident Reports",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
-                            color: blackColor,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: whiteColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: blackColor.withOpacity(0.1),
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: blackColor.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        children: [
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: 40,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10)
+                                  // shape: BoxShape.circle,
+                                  ),
+                            ),
                           ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await saveDataTableToPDF(
-                                filteredReports, 'Incident Reports');
-                          },
-                          child: const Text("Save to PDF"),
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: 40,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10)
+                                  // shape: BoxShape.circle,
+                                  ),
+                            ),
+                          ),
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: 40,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10)
+                                  // shape: BoxShape.circle,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      PRKIconButton(
+                        title: isExporting ? "Exporting..." : "Export",
+                        icon: isExporting
+                            ? Icons.hourglass_empty_rounded
+                            : Icons.file_upload_outlined,
+                        onTap: isExporting
+                            ? () {}
+                            : () async {
+                                setState(() {
+                                  isExporting = true;
+                                });
+                                await saveDataTableToPDF(
+                                    filteredReports, 'Incident Reports');
+                                setState(() {
+                                  isExporting = false;
+                                });
+                              },
+                      )
+                    ],
+                  ),
+                )
+                    .animate()
+                    .fade(
+                      delay: const Duration(
+                        milliseconds: 200,
+                      ),
+                    )
+                    .moveY(
+                      begin: 10,
+                      end: 0,
+                      curve: Curves.fastEaseInToSlowEaseOut,
+                      duration: const Duration(milliseconds: 450),
+                    ),
+                const SizedBox(
+                  height: 12,
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: whiteColor,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: blackColor.withOpacity(0.1),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: blackColor.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                    Theme(
+                    child: Theme(
                       data: Theme.of(context).copyWith(
                         dataTableTheme: DataTableThemeData(
                           dividerThickness: 0.2,
@@ -649,61 +758,104 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                         ],
                       ),
                     ),
-                    Wrap(
-                      alignment: WrapAlignment.end,
-                      crossAxisAlignment: WrapCrossAlignment.end,
-                      children: List.generate(
-                        totalPages,
-                        (index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: TextButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStatePropertyAll(
-                                  index == _currentPage
-                                      ? blueColor
-                                      : whiteColor,
-                                ),
-                                shape: WidgetStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    side: BorderSide(
-                                      color: index == _currentPage
-                                          ? Colors.transparent
-                                          : blueColor,
-                                    ),
+                  ),
+                )
+                    .animate()
+                    .fade(
+                      delay: const Duration(
+                        milliseconds: 300,
+                      ),
+                    )
+                    .moveY(
+                      begin: 10,
+                      end: 0,
+                      curve: Curves.fastEaseInToSlowEaseOut,
+                      duration: const Duration(milliseconds: 650),
+                    ),
+                const SizedBox(
+                  height: 12,
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: whiteColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: blackColor.withOpacity(0.1),
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: blackColor.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: List.generate(
+                      totalPages,
+                      (index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: TextButton(
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStatePropertyAll(
+                                index == _currentPage ? blueColor : whiteColor,
+                              ),
+                              shape: WidgetStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(
+                                    color: index == _currentPage
+                                        ? Colors.transparent
+                                        : blueColor,
                                   ),
                                 ),
-                                fixedSize: WidgetStateProperty.all(
-                                  const Size(30, 40),
-                                ),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _currentPage = index;
-                                });
-                              },
-                              child: Text(
-                                "${index + 1}",
-                                style: TextStyle(
-                                  color: index == _currentPage
-                                      ? whiteColor
-                                      : blueColor,
-                                  fontWeight: index == _currentPage
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  fontSize: 16,
-                                ),
+                              fixedSize: WidgetStateProperty.all(
+                                const Size(30, 40),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                            onPressed: () {
+                              setState(() {
+                                _currentPage = index;
+                              });
+                            },
+                            child: Text(
+                              "${index + 1}",
+                              style: TextStyle(
+                                color: index == _currentPage
+                                    ? whiteColor
+                                    : blueColor,
+                                fontWeight: index == _currentPage
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                )
+                    .animate()
+                    .fade(
+                      delay: const Duration(
+                        milliseconds: 400,
+                      ),
+                    )
+                    .moveY(
+                      begin: 10,
+                      end: 0,
+                      curve: Curves.fastEaseInToSlowEaseOut,
+                      duration: const Duration(milliseconds: 850),
+                    ),
+              ],
             ),
           ],
         ),
@@ -757,7 +909,7 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
             if (states.contains(WidgetState.hovered)) {
               return blackColor.withOpacity(0.05);
             }
-            return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
+            return Colors.transparent;
           },
         ),
       );
@@ -819,12 +971,29 @@ void _modal(BuildContext context, String reporterName, String description,
                       ),
                     ],
                   ),
-                  Text(
-                    timestamp,
-                    style: TextStyle(
-                      fontWeight: FontWeight.normal,
-                      color: blackColor.withOpacity(0.5),
-                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      const Text(
+                        'Date & Time: ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        timestamp,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: blackColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -887,6 +1056,7 @@ void _modal(BuildContext context, String reporterName, String description,
             ],
           ),
         ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         actions: [
           TextButton(
             onPressed: () {
@@ -919,6 +1089,7 @@ class _HoverableImageState extends State<HoverableImage> {
   bool _isHovered = false;
   bool _isLoading = true;
   double _opacity = 0.0;
+  bool _hasError = false;
 
   @override
   Widget build(BuildContext context) {
@@ -951,12 +1122,15 @@ class _HoverableImageState extends State<HoverableImage> {
             width: MediaQuery.of(context).size.width * 0.9,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: blackColor.withOpacity(0.15),
+                width: 0.5,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Stack(
                 children: [
-                  // Shimmer effect while loading
                   if (_isLoading)
                     Shimmer.fromColors(
                       baseColor: Colors.grey[300]!,
@@ -967,7 +1141,6 @@ class _HoverableImageState extends State<HoverableImage> {
                         width: MediaQuery.of(context).size.width * 0.9,
                       ),
                     ),
-
                   AnimatedOpacity(
                     opacity: _opacity,
                     duration: const Duration(milliseconds: 500),
@@ -989,8 +1162,24 @@ class _HoverableImageState extends State<HoverableImage> {
                           return const SizedBox.shrink();
                         }
                       },
+                      errorBuilder: (context, error, stackTrace) {
+                        Future.microtask(() {
+                          setState(() {
+                            _hasError = true;
+                            _isLoading = false;
+                          });
+                        });
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ),
+                  if (_hasError)
+                    Center(
+                      child: Text(
+                        'Failed to load image',
+                        style: TextStyle(color: blackColor.withOpacity(0.5)),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1001,20 +1190,77 @@ class _HoverableImageState extends State<HoverableImage> {
   }
 }
 
-class ImageViewer extends StatelessWidget {
+class ImageViewer extends StatefulWidget {
   final String imageUrl;
 
   const ImageViewer({required this.imageUrl, super.key});
 
   @override
+  State<ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<ImageViewer> {
+  @override
   Widget build(BuildContext context) {
+    bool _isLoading = true;
+    bool _hasError = false;
+
     return Scaffold(
       backgroundColor: blackColor,
       body: Stack(
         children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Stack(
+                children: [
+                  if (_isLoading)
+                    LoadingAnimationWidget.waveDots(
+                      color: blueColor,
+                      size: 50,
+                    ),
+                  Image.network(
+                    widget.imageUrl,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        Future.microtask(() {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        });
+                        return child;
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      setState(() {
+                        _hasError = true;
+                        _isLoading = false;
+                      });
+                      return Center(
+                        child: Text(
+                          'Failed to load image',
+                          style: TextStyle(color: whiteColor.withOpacity(0.5)),
+                        ),
+                      );
+                    },
+                  ),
+                  if (_hasError)
+                    Center(
+                      child: Text(
+                        'Failed to load image',
+                        style: TextStyle(color: whiteColor.withOpacity(0.5)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
           Positioned(
             top: 10,
-            left: 10,
+            right: 10,
             child: IconButton.filled(
               style: const ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(whiteColor)),
@@ -1025,12 +1271,6 @@ class ImageViewer extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Image.network(imageUrl),
             ),
           ),
         ],
