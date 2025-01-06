@@ -9,7 +9,7 @@ class NavbarMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayout(
-      mobileLayout: NavbarMobile(onMenuPressed: () {}, pageName: '',),
+      mobileLayout: NavbarMobile(onMenuPressed: () {}),
       desktopLayout: const NavbarDesktop(),
     );
   }
