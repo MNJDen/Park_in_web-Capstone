@@ -1,21 +1,19 @@
-import 'dart:io';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:park_in_web/components/fields/search_field.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
+import 'package:park_in_web/components/snackbar/success_snackbar.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:intl/intl.dart';
+import 'package:park_in_web/components/ui/icon_btn.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:shimmer/shimmer.dart';
-import 'dart:convert';
-import 'dart:html' as html;
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 class TicketsDesktopScreen extends StatefulWidget {
   const TicketsDesktopScreen({super.key});
@@ -33,10 +31,13 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
   List<Map<String, dynamic>> tickets = [];
   List<Map<String, dynamic>> filteredTickets = [];
   bool _isLoading = true;
+  bool isExporting = false;
 
   // Tracking sorted column and sort order (ascending/descending)
   int _sortColumnIndex = 0;
   bool _isAscending = true;
+  bool isResolved = false;
+  bool isPending = false;
 
   @override
   void initState() {
@@ -63,6 +64,8 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
           ticketData['docID'] = doc.id;
           return ticketData;
         }).toList();
+
+        _totalItems = tickets.length;
 
         // Sorting tickets by timestamp
         tickets.sort((a, b) {
@@ -109,6 +112,21 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
               status.contains(query) ||
               ticketDate.contains(query);
         }).toList();
+      }
+
+      if (isResolved && isPending) {
+        filteredTickets = filteredTickets
+            .where((ticket) =>
+                ticket['status'] == 'Resolved' || ticket['status'] == 'Pending')
+            .toList();
+      } else if (isResolved) {
+        filteredTickets = filteredTickets
+            .where((ticket) => ticket['status'] == 'Resolved')
+            .toList();
+      } else if (isPending) {
+        filteredTickets = filteredTickets
+            .where((ticket) => ticket['status'] == 'Pending')
+            .toList();
       }
     });
   }
@@ -170,7 +188,13 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
         item['docID'] ?? '',
         item['plate_number'] ?? '',
         item['vehicle_type'] ?? '',
-        item['violation'] ?? '',
+        pw.Container(
+          width: 350,
+          padding: const pw.EdgeInsets.all(5),
+          child: pw.Text(
+            item['violation'] ?? '',
+          ),
+        ),
         item['status'] ?? '',
         (item['timestamp'] != null && item['timestamp'] is Timestamp)
             ? DateFormat('dd MMM yyyy, HH:mm')
@@ -216,13 +240,13 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                   ),
                   pw.Text(
                     'Administrative Office',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 12,
                     ),
                   ),
                   pw.Text(
                     'Ateneo Ave, Naga, 4400 Camarines Sur',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 12,
                     ),
                   ),
@@ -244,7 +268,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
               ),
               pw.Text(
                 '  as of $formattedDate',
-                style: pw.TextStyle(fontSize: 12),
+                style: const pw.TextStyle(fontSize: 12),
               ),
             ],
           ),
@@ -252,7 +276,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
           pw.Table(
             border: pw.TableBorder.all(
               width: 1.0,
-              color: PdfColor.fromInt(0xFF9E9E9E),
+              color: const PdfColor.fromInt(0xFF9E9E9E),
             ),
             children: [
               // Header row
@@ -260,52 +284,50 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                 children: [
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Ticket ID',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('Doc ID',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Ticketed To',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('Plate Number',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
                     child: pw.Text('Vehicle Type',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
                     child: pw.Text('Violation',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
                     child: pw.Text('Status',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Date',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('Timestamp',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                 ],
               ),
               // Data rows
               for (final row in tableRows)
                 pw.TableRow(
-                  children: row
-                      .map((cell) => pw.Padding(
-                            padding: const pw.EdgeInsets.all(5),
-                            child: pw.Text(cell.toString(),
-                                style: pw.TextStyle(fontSize: 10)),
-                          ))
-                      .toList(),
+                  children: row.map((cell) {
+                    if (cell is String) {
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text(cell),
+                      );
+                    } else if (cell is pw.Widget) {
+                      return cell;
+                    }
+                    return pw.Text('');
+                  }).toList(),
                 ),
             ],
           ),
@@ -340,195 +362,386 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Violation Tickets",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 24,
-                            color: blackColor,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: whiteColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: blackColor.withOpacity(0.1),
+                          width: 0.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: blackColor.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await saveDataTableToPDF(
-                                filteredTickets, 'Violation Tickets');
-                          },
-                          child: const Text("Save to PDF"),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 46,
-                          width: 210,
-                          child: PRKSearchField(
-                            hintText: "Search",
-                            prefixIcon: Icons.search_rounded,
-                            controller: _searchCtrl,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Theme(
-                            data: Theme.of(context).copyWith(
-                              dataTableTheme: DataTableThemeData(
-                                dividerThickness: 0.2,
-                                headingRowColor: WidgetStateColor.resolveWith(
-                                    (states) => whiteColor),
-                                dataRowColor: WidgetStateColor.resolveWith(
-                                    (states) => whiteColor),
-                                headingTextStyle: const TextStyle(
-                                    color: blackColor,
-                                    fontWeight: FontWeight.w500),
-                                dataTextStyle:
-                                    const TextStyle(color: blackColor),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Violation Tickets",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20,
+                                  color: blackColor,
+                                ),
                               ),
-                            ),
-                            child: DataTable(
-                              columns: [
-                                DataColumn(
-                                  label: const Text("Ticket ID"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<String>(
-                                          (report) => report['docID'] ?? 0,
-                                          columnIndex,
-                                          ascending),
+                              SizedBox(
+                                height: 40,
+                                width: 210,
+                                child: PRKSearchField(
+                                  hintText: "Search",
+                                  prefixIcon: Icons.search_rounded,
+                                  controller: _searchCtrl,
                                 ),
-                                DataColumn(
-                                  label: const Text("Ticketed To"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<String>(
-                                          (report) =>
-                                              report['plate_number'] ?? 0,
-                                          columnIndex,
-                                          ascending),
-                                ),
-                                DataColumn(
-                                  label: const Text("Vehicle Type"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<String>(
-                                          (report) =>
-                                              report['vehicle_type'] ?? 0,
-                                          columnIndex,
-                                          ascending),
-                                ),
-                                DataColumn(
-                                  label: const Text("Violation"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<String>(
-                                          (report) => report['violation'] ?? 0,
-                                          columnIndex,
-                                          ascending),
-                                ),
-                                DataColumn(
-                                  label: const Text("Status"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<String>(
-                                          (report) => report['status'] ?? 0,
-                                          columnIndex,
-                                          ascending),
-                                ),
-                                DataColumn(
-                                  label: const Text("Date"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<DateTime>(
-                                          (report) =>
-                                              (report['timestamp'] as Timestamp)
-                                                  .toDate(),
-                                          columnIndex,
-                                          ascending),
-                                ),
-                              ],
-                              dataRowMinHeight:
-                                  MediaQuery.of(context).size.height * 0.03,
-                              dataRowMaxHeight:
-                                  MediaQuery.of(context).size.height * 0.071,
-                              sortColumnIndex: _sortColumnIndex,
-                              sortAscending: _isAscending,
-                              rows: _buildReportRows(filteredTickets, context),
-                              showCheckboxColumn: false,
-                            ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          // crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              "showing 10 out of 1024",
-                              style: TextStyle(
-                                  color: blackColor.withOpacity(0.5),
-                                  fontSize: 12),
-                            )
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: List.generate(
-                            totalPages,
-                            (index) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: TextButton(
-                                  style: ButtonStyle(
-                                    backgroundColor: WidgetStatePropertyAll(
-                                      index == _currentPage
-                                          ? blueColor
-                                          : whiteColor,
+                          const SizedBox(height: 12),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 12,
+                                children: [
+                                  const Text(
+                                    "Filters",
+                                    style: TextStyle(
+                                      color: blackColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    shape: WidgetStateProperty.all<
-                                        RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                        side: BorderSide(
-                                          color: index == _currentPage
-                                              ? Colors.transparent
-                                              : blueColor,
+                                  ),
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Transform.scale(
+                                        scale: 0.9,
+                                        child: Checkbox(
+                                          value: isResolved,
+                                          activeColor: const Color.fromARGB(
+                                              255, 17, 194, 1),
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              isResolved = value!;
+                                              if (isResolved) {
+                                                isPending = false;
+                                              }
+                                              _applySearchFilter();
+                                            });
+                                          },
                                         ),
                                       ),
-                                    ),
-                                    fixedSize: WidgetStateProperty.all(
-                                      const Size(30, 40),
-                                    ),
+                                      const Text(
+                                        "Resolved",
+                                        style: TextStyle(
+                                          color: blackColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      )
+                                    ],
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _currentPage = index;
-                                    });
-                                  },
-                                  child: Text(
-                                    "${index + 1}",
-                                    style: TextStyle(
-                                      color: index == _currentPage
-                                          ? whiteColor
-                                          : blueColor,
-                                      fontWeight: index == _currentPage
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      fontSize: 16,
-                                    ),
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Transform.scale(
+                                        scale: 0.9,
+                                        child: Checkbox(
+                                          value: isPending,
+                                          activeColor: parkingOrangeColor,
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              isPending = value!;
+                                              if (isPending) {
+                                                isResolved = false;
+                                              }
+                                              _applySearchFilter();
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      const Text(
+                                        "Pending",
+                                        style: TextStyle(
+                                          color: blackColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              PRKIconButton(
+                                title: isExporting ? "Exporting..." : "Export",
+                                icon: isExporting
+                                    ? Icons.hourglass_empty_rounded
+                                    : Icons.file_upload_outlined,
+                                onTap: isExporting
+                                    ? () {}
+                                    : () async {
+                                        setState(() {
+                                          isExporting = true;
+                                        });
+                                        await saveDataTableToPDF(
+                                            filteredTickets,
+                                            'Violation Tickets');
+                                        setState(() {
+                                          isExporting = false;
+                                        });
+                                      },
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                    )
+                        .animate()
+                        .fade(
+                          delay: const Duration(
+                            milliseconds: 100,
+                          ),
+                        )
+                        .moveY(
+                            begin: 10,
+                            end: 0,
+                            curve: Curves.fastEaseInToSlowEaseOut,
+                            duration: const Duration(milliseconds: 250)),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: whiteColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: blackColor.withOpacity(0.1),
+                            width: 0.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: blackColor.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Theme(
+                                data: Theme.of(context).copyWith(
+                                  dataTableTheme: DataTableThemeData(
+                                    dividerThickness: 0.2,
+                                    headingRowColor:
+                                        WidgetStateColor.resolveWith(
+                                            (states) => whiteColor),
+                                    dataRowColor: WidgetStateColor.resolveWith(
+                                        (states) => whiteColor),
+                                    headingTextStyle: const TextStyle(
+                                        color: blackColor,
+                                        fontWeight: FontWeight.w500),
+                                    dataTextStyle:
+                                        const TextStyle(color: blackColor),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+                                child: DataTable(
+                                  columns: [
+                                    DataColumn(
+                                      label: const Text("Ticket ID"),
+                                      onSort: (columnIndex, ascending) =>
+                                          _sort<String>(
+                                              (report) => report['docID'] ?? 0,
+                                              columnIndex,
+                                              ascending),
+                                    ),
+                                    DataColumn(
+                                      label: const Text("Ticketed To"),
+                                      onSort: (columnIndex, ascending) =>
+                                          _sort<String>(
+                                              (report) =>
+                                                  report['plate_number'] ?? 0,
+                                              columnIndex,
+                                              ascending),
+                                    ),
+                                    DataColumn(
+                                      label: const Text("Vehicle Type"),
+                                      onSort: (columnIndex, ascending) =>
+                                          _sort<String>(
+                                              (report) =>
+                                                  report['vehicle_type'] ?? 0,
+                                              columnIndex,
+                                              ascending),
+                                    ),
+                                    DataColumn(
+                                      label: const Text("Violation"),
+                                      onSort: (columnIndex, ascending) =>
+                                          _sort<String>(
+                                              (report) =>
+                                                  report['violation'] ?? 0,
+                                              columnIndex,
+                                              ascending),
+                                    ),
+                                    DataColumn(
+                                      label: const Text("Status"),
+                                      onSort: (columnIndex, ascending) =>
+                                          _sort<String>(
+                                              (report) => report['status'] ?? 0,
+                                              columnIndex,
+                                              ascending),
+                                    ),
+                                    DataColumn(
+                                      label: const Text("Date"),
+                                      onSort: (columnIndex, ascending) =>
+                                          _sort<DateTime>(
+                                              (report) => (report['timestamp']
+                                                      as Timestamp)
+                                                  .toDate(),
+                                              columnIndex,
+                                              ascending),
+                                    ),
+                                  ],
+                                  dataRowMinHeight:
+                                      MediaQuery.of(context).size.height * 0.03,
+                                  dataRowMaxHeight:
+                                      MediaQuery.of(context).size.height * 0.06,
+                                  sortColumnIndex: _sortColumnIndex,
+                                  sortAscending: _isAscending,
+                                  rows: _buildReportRows(
+                                      filteredTickets, context),
+                                  showCheckboxColumn: false,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    )
+                        .animate()
+                        .fade(
+                          delay: const Duration(
+                            milliseconds: 200,
+                          ),
+                        )
+                        .moveY(
+                            begin: 10,
+                            end: 0,
+                            curve: Curves.fastEaseInToSlowEaseOut,
+                            duration: const Duration(milliseconds: 450)),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: whiteColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: blackColor.withOpacity(0.1),
+                          width: 0.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: blackColor.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            // crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Showing ${min((_currentPage + 1) * _rowsPerPage, _totalItems)} out of $_totalItems",
+                                style: TextStyle(
+                                    color: blackColor.withOpacity(0.5),
+                                    fontSize: 12),
+                              )
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: List.generate(
+                              totalPages,
+                              (index) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: TextButton(
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStatePropertyAll(
+                                        index == _currentPage
+                                            ? blueColor
+                                            : whiteColor,
+                                      ),
+                                      shape: WidgetStateProperty.all<
+                                          RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          side: BorderSide(
+                                            color: index == _currentPage
+                                                ? Colors.transparent
+                                                : blueColor,
+                                          ),
+                                        ),
+                                      ),
+                                      fixedSize: WidgetStateProperty.all(
+                                        const Size(30, 40),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _currentPage = index;
+                                      });
+                                    },
+                                    child: Text(
+                                      "${index + 1}",
+                                      style: TextStyle(
+                                        color: index == _currentPage
+                                            ? whiteColor
+                                            : blueColor,
+                                        fontWeight: index == _currentPage
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                        .animate()
+                        .fade(
+                          delay: const Duration(
+                            milliseconds: 300,
+                          ),
+                        )
+                        .moveY(
+                            begin: 10,
+                            end: 0,
+                            curve: Curves.fastEaseInToSlowEaseOut,
+                            duration: const Duration(milliseconds: 650)),
                   ],
                 ),
               ),
@@ -552,7 +765,9 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
       final ticketedTo = ticket['plate_number'] ?? '';
       final vehicleType = ticket['vehicle_type'] ?? '';
       final violation = ticket['violation'] ?? '';
-      final description = ticket['description'] ?? '';
+      final description = ticket['description']?.isNotEmpty == true
+          ? ticket['description']
+          : 'N/A';
       final status = ticket['status'] ?? 'Pending';
       final timestamp =
           (ticket['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
@@ -569,10 +784,17 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
           DataCell(Text(docID)),
           DataCell(Text(ticketedTo)),
           DataCell(Text(vehicleType)),
-          DataCell(Text(violation)),
+          DataCell(Container(
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.35),
+            child: Text(
+              violation,
+              style: const TextStyle(overflow: TextOverflow.fade),
+            ),
+          )),
           DataCell(
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               decoration: BoxDecoration(
                 color: status == 'Resolved'
                     ? parkingGreenColor.withOpacity(0.08)
@@ -618,7 +840,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
             if (states.contains(WidgetState.hovered)) {
               return blackColor.withOpacity(0.05);
             }
-            return index.isEven ? blueColor.withOpacity(0.05) : whiteColor;
+            return Colors.transparent;
           },
         ),
       );
@@ -1003,6 +1225,8 @@ void _confirmResolveModal(BuildContext context, String docID) async {
       },
     );
     Navigator.of(context).pop();
+    successSnackbar(
+        context, "Ticket Resolved!", MediaQuery.of(context).size.width * 0.3);
   }
 }
 
@@ -1076,6 +1300,8 @@ void _confirmRevertModal(BuildContext context, String docID) async {
       },
     );
     Navigator.of(context).pop();
+    successSnackbar(context, "Ticket Reverted to Pending!",
+        MediaQuery.of(context).size.width * 0.3);
   }
 }
 
@@ -1099,14 +1325,16 @@ class HoverableImage extends StatefulWidget {
 
 class _HoverableImageState extends State<HoverableImage> {
   bool _isHovered = false;
-  bool _isLoading = true; // Add a loading state
-  double _opacity = 0.0; // For the fade-in effect
+  bool _isLoading = true;
+  double _opacity = 0.0;
+  bool _hasError = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => widget.onTap(widget.index),
         child: AnimatedScale(
@@ -1143,6 +1371,7 @@ class _HoverableImageState extends State<HoverableImage> {
                     child: Image.network(
                       widget.imageUrl,
                       fit: BoxFit.cover,
+                      filterQuality: FilterQuality.medium,
                       height: MediaQuery.of(context).size.height * 0.2,
                       width: MediaQuery.of(context).size.width * 0.095,
                       loadingBuilder: (context, child, loadingProgress) {
@@ -1158,8 +1387,24 @@ class _HoverableImageState extends State<HoverableImage> {
                           return const SizedBox.shrink();
                         }
                       },
+                      errorBuilder: (context, error, stackTrace) {
+                        Future.microtask(() {
+                          setState(() {
+                            _hasError = true;
+                            _isLoading = false;
+                          });
+                        });
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ),
+                  if (_hasError)
+                    Center(
+                      child: Text(
+                        'Failed to load image',
+                        style: TextStyle(color: blackColor.withOpacity(0.5)),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1186,6 +1431,8 @@ class ImageViewer extends StatefulWidget {
 
 class _ImageViewerState extends State<ImageViewer> {
   late int _currentIndex;
+  bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -1199,33 +1446,53 @@ class _ImageViewerState extends State<ImageViewer> {
       backgroundColor: blackColor,
       body: Stack(
         children: [
-          Positioned(
-            top: 10,
-            left: 10,
-            child: IconButton.filled(
-              style: const ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll(whiteColor)),
-              icon: const Icon(
-                Icons.close_rounded,
-                color: blackColor,
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Image.network(
-                widget.imageUrls[_currentIndex],
-                fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  if (_isLoading)
+                    LoadingAnimationWidget.waveDots(
+                      color: blueColor,
+                      size: 50,
+                    ),
+                  Image.network(
+                    widget.imageUrls[_currentIndex],
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        Future.microtask(() {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        });
+                        return child;
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      Future.microtask(() {
+                        setState(() {
+                          _hasError = true;
+                          _isLoading = false;
+                        });
+                      });
+                      return Center(
+                        child: Text(
+                          'Failed to load image',
+                          style: TextStyle(color: whiteColor.withOpacity(0.5)),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
           Padding(
             padding:
-                EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.03),
+                EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.01),
             child: Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
@@ -1246,7 +1513,7 @@ class _ImageViewerState extends State<ImageViewer> {
           ),
           Padding(
             padding: EdgeInsets.only(
-                right: MediaQuery.of(context).size.width * 0.03),
+                right: MediaQuery.of(context).size.width * 0.01),
             child: Align(
               alignment: Alignment.centerRight,
               child: IconButton(
@@ -1263,6 +1530,21 @@ class _ImageViewerState extends State<ImageViewer> {
                       }
                     : null,
               ),
+            ),
+          ),
+          Positioned(
+            top: 10,
+            right: 10,
+            child: IconButton.filled(
+              style: const ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(whiteColor)),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: blackColor,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
           ),
         ],
