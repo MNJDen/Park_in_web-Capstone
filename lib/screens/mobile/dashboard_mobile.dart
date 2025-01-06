@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:park_in_web/components/navbar/navbar_mobile.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/ui/large_card_mobile.dart';
@@ -144,17 +145,6 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
   }
 
   Widget build(BuildContext context) {
-    String pageName;
-    if (_selectedPage == '/dashboard') {
-      pageName = 'Dashboard';
-    } else if (_selectedPage == '/reports') {
-      pageName = 'Reports';
-    } else if (_selectedPage == '/tickets-issued') {
-      pageName = 'Tickets Issued';
-    } else {
-      pageName = '';
-    }
-
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: bgColor,
@@ -221,7 +211,7 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
                 Icons.tv_rounded,
                 color: blackColor,
               ),
-              title: const Text('View'),
+              title: const Text('Live View'),
               onTap: () {
                 _onItemTap('View');
               },
@@ -245,140 +235,162 @@ class _DashboardMobileScreenState extends State<DashboardMobileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           children: [
-            NavbarMobile(
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              pageName: pageName,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                NavbarMobile(
+                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+                const Text(
+                  "Dashboard",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: whiteColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(
               height: 12,
             ),
             Expanded(
-              child: Container(
-                height: MediaQuery.of(context).size.height,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: whiteColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: StreamBuilder(
-                  stream: _database.onValue,
-                  builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-                    if (snapshot.hasData &&
-                        snapshot.data!.snapshot.value != null) {
-                      final data = snapshot.data!.snapshot.value
-                          as Map<dynamic, dynamic>;
-                      final counts = _calculateCounts(data);
+              child: StreamBuilder(
+                stream: _database.onValue,
+                builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+                  if (snapshot.hasData &&
+                      snapshot.data!.snapshot.value != null) {
+                    final data =
+                        snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+                    final counts = _calculateCounts(data);
 
-                      return ListView(
-                        children: [
-                          PRKSmallCardMobile(
-                            label: "Two-Wheels",
-                            content: "${counts['twoWheelsCount']}",
-                            sub: "Parking spaces available",
-                            height: 190,
-                            color: parkingGreenColor,
-                            icon: Icons.two_wheeler_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          PRKSmallCardMobile(
-                            label: "Four-Wheels",
-                            content: "${counts['fourWheelsCount']}",
-                            sub: "Parking spaces available",
-                            height: 190,
-                            color: parkingYellowColor,
-                            icon: Icons.airport_shuttle_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          StreamBuilder<QuerySnapshot>(
-                            stream: _violationTickets.snapshots(),
-                            builder: (context,
-                                AsyncSnapshot<QuerySnapshot> ticketSnapshot) {
-                              int violationCount = 0;
-                              if (ticketSnapshot.hasData) {
-                                violationCount = ticketSnapshot.data!.size;
-                              }
-                              return PRKSmallCardMobile(
-                                label: "Violations",
-                                content: "$violationCount",
-                                sub: "Infractions committed",
-                                height: 190,
-                                onPressed: () {},
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          StreamBuilder<QuerySnapshot>(
-                            stream: _incidentReports.snapshots(),
-                            builder: (context,
-                                AsyncSnapshot<QuerySnapshot> reportSnapshot) {
-                              int reportCount = 0;
-                              if (reportSnapshot.hasData) {
-                                reportCount = reportSnapshot.data!.size;
-                              }
-                              return PRKSmallCardMobile(
-                                label: "Reports",
-                                content: "$reportCount",
-                                sub: "Received reports",
-                                height: 190,
-                                onPressed: () {},
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          const PRKUserCardMobile(height: 400),
-                          const SizedBox(height: 16),
-                          const PRKLargeCardMobile(height: 750),
-                        ],
-                      );
-                    } else {
-                      return ListView(
-                        children: [
-                          PRKSmallCardMobile(
-                            label: "Two-Wheels",
-                            content: "Loading...",
-                            sub: "Parking spaces available",
-                            height: 190,
-                            color: parkingGreenColor,
-                            icon: Icons.two_wheeler_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          PRKSmallCardMobile(
-                            label: "Four-Wheels",
-                            content: "Loading...",
-                            sub: "Parking spaces available",
-                            height: 190,
-                            color: parkingYellowColor,
-                            icon: Icons.airport_shuttle_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          PRKSmallCardMobile(
-                            label: "Violations",
-                            content: "Loading...",
-                            sub: "Infractions committed",
-                            height: 190,
-                            onPressed: () {},
-                          ),
-                          const SizedBox(height: 16),
-                          PRKSmallCardMobile(
-                            label: "Reports",
-                            content: "Loading...",
-                            sub: "Received reports",
-                            height: 190,
-                            onPressed: () {},
-                          ),
-                          const SizedBox(height: 16),
-                          const PRKUserCardMobile(height: 400),
-                          const SizedBox(height: 16),
-                          const PRKLargeCardMobile(height: 750),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              ),
+                    return ListView(
+                      children: [
+                        PRKSmallCardMobile(
+                          label: "Two-Wheels",
+                          content: counts['twoWheelsCount'] == 0
+                              ? "Full"
+                              : "${counts['twoWheelsCount']}",
+                          sub: "Parking spaces available",
+                          height: 190,
+                          color: parkingGreenColor,
+                          icon: Icons.two_wheeler_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        PRKSmallCardMobile(
+                          label: "Four-Wheels",
+                          content: counts['fourWheelsCount'] == 0
+                              ? "Full"
+                              : "${counts['fourWheelsCount']}",
+                          sub: "Parking spaces available",
+                          height: 190,
+                          color: parkingYellowColor,
+                          icon: Icons.airport_shuttle_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: _violationTickets.snapshots(),
+                          builder: (context,
+                              AsyncSnapshot<QuerySnapshot> ticketSnapshot) {
+                            int violationCount = 0;
+                            if (ticketSnapshot.hasData) {
+                              violationCount = ticketSnapshot.data!.size;
+                            }
+                            return PRKSmallCardMobile(
+                              label: "Violations",
+                              content: "$violationCount",
+                              sub: "Infractions committed",
+                              height: 190,
+                              onPressed: () {
+                                _onItemTap('Tickets Issued');
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: _incidentReports.snapshots(),
+                          builder: (context,
+                              AsyncSnapshot<QuerySnapshot> reportSnapshot) {
+                            int reportCount = 0;
+                            if (reportSnapshot.hasData) {
+                              reportCount = reportSnapshot.data!.size;
+                            }
+                            return PRKSmallCardMobile(
+                              label: "Reports",
+                              content: "$reportCount",
+                              sub: "Received reports",
+                              height: 190,
+                              onPressed: () {
+                                _onItemTap('Reports');
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const PRKUserCardMobile(height: 400),
+                        const SizedBox(height: 16),
+                        const PRKLargeCardMobile(height: 750),
+                      ],
+                    );
+                  } else {
+                    return ListView(
+                      children: [
+                        const PRKSmallCardMobile(
+                          label: "Two-Wheels",
+                          content: "...",
+                          sub: "Parking spaces available",
+                          height: 190,
+                          color: parkingGreenColor,
+                          icon: Icons.two_wheeler_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        const PRKSmallCardMobile(
+                          label: "Four-Wheels",
+                          content: "...",
+                          sub: "Parking spaces available",
+                          height: 190,
+                          color: parkingYellowColor,
+                          icon: Icons.airport_shuttle_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        PRKSmallCardMobile(
+                          label: "Violations",
+                          content: "...",
+                          sub: "Infractions committed",
+                          height: 190,
+                          onPressed: () {},
+                        ),
+                        const SizedBox(height: 16),
+                        PRKSmallCardMobile(
+                          label: "Reports",
+                          content: "...",
+                          sub: "Received reports",
+                          height: 190,
+                          onPressed: () {},
+                        ),
+                        const SizedBox(height: 16),
+                        const PRKUserCardMobile(height: 400),
+                        const SizedBox(height: 16),
+                        const PRKLargeCardMobile(height: 750),
+                      ],
+                    );
+                  }
+                },
+              )
+                  .animate()
+                  .fade(
+                    delay: const Duration(
+                      milliseconds: 100,
+                    ),
+                  )
+                  .moveY(
+                    begin: 10,
+                    end: 0,
+                    curve: Curves.fastEaseInToSlowEaseOut,
+                    duration: const Duration(milliseconds: 250),
+                  ),
             )
           ],
         ),
