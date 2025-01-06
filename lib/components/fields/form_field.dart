@@ -68,6 +68,7 @@ class _PRKFormFieldState extends State<PRKFormField> {
         color: blackColor,
       ),
       decoration: InputDecoration(
+        // contentPadding: const EdgeInsets.all(20),
         filled: true,
         fillColor: whiteColor,
         prefixIcon: Icon(
