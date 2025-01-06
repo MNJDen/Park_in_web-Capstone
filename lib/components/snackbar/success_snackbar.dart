@@ -15,9 +15,9 @@ void successSnackbar(BuildContext context, String message, double width) {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Icon(
-          Icons.check_circle_outline_rounded,
+          Icons.check_circle_rounded,
           color: successColor,
-          size: 20,
+          size: 28,
         ),
         const SizedBox(
           width: 8,
@@ -28,7 +28,7 @@ void successSnackbar(BuildContext context, String message, double width) {
             style: const TextStyle(
               color: whiteColor,
               fontWeight: FontWeight.w400,
-              fontSize: 12,
+              fontSize: 14,
             ),
           ),
         ),
