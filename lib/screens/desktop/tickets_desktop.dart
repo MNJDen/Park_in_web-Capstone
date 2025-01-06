@@ -128,6 +128,12 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
             .where((ticket) => ticket['status'] == 'Pending')
             .toList();
       }
+
+      // set the number of total items to the length of filtered tickets
+      _totalItems = filteredTickets.length;
+
+      // reset current page para dae mag out of bounds
+      _currentPage = 0;
     });
   }
 
@@ -152,6 +158,7 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
   int _rowsPerPage = 10; // Rows per page
   int _totalItems = 0;
   bool isLoading = false;
+  int get totalPages => (_totalItems / _rowsPerPage).ceil();
 
   Future<void> fetchTotalItems() async {
     setState(() {
@@ -178,8 +185,6 @@ class _TicketsDesktopScreenState extends State<TicketsDesktopScreen> {
         await rootBundle.load('assets/images/adnu_logo.png');
     logoImage = pw.MemoryImage(imageData.buffer.asUint8List());
   }
-
-  int get totalPages => (_totalItems / _rowsPerPage).ceil();
 
   Future<void> saveDataTableToPDF(
       List<Map<String, dynamic>> data, String fileName) async {
