@@ -17,7 +17,7 @@ void errorSnackbar(BuildContext context, String message, double? width) {
         const Icon(
           Icons.error_rounded,
           color: parkingRedColor,
-          size: 20,
+          size: 28,
         ),
         const SizedBox(
           width: 8,
@@ -28,7 +28,7 @@ void errorSnackbar(BuildContext context, String message, double? width) {
             style: const TextStyle(
               color: whiteColor,
               fontWeight: FontWeight.w400,
-              fontSize: 12,
+              fontSize: 14,
             ),
           ),
         ),
