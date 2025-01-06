@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
 class ViewMobileScreen extends StatefulWidget {
@@ -13,11 +17,56 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
   final DatabaseReference _dbRef =
       FirebaseDatabase.instance.ref('parkingAreas');
   int totalParkingCount = 0;
+  bool _isLoading = true;
+
+  late Timer _timer;
+  DateTime now = DateTime.now();
+
+  final List<String> monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+
+  String _getDayOfWeek(int weekday) {
+    switch (weekday) {
+      case 1:
+        return "Monday";
+      case 2:
+        return "Tuesday";
+      case 3:
+        return "Wednesday";
+      case 4:
+        return "Thursday";
+      case 5:
+        return "Friday";
+      case 6:
+        return "Saturday";
+      case 7:
+        return "Sunday";
+      default:
+        return "";
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _listenToParkingUpdates();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        now = DateTime.now();
+      });
+    });
   }
 
   // Listen to real-time updates from Firebase
@@ -37,6 +86,7 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
         if (mounted) {
           setState(() {
             totalParkingCount = total;
+            _isLoading = false;
           });
         }
       } else {
@@ -47,11 +97,18 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
 
   @override
   void dispose() {
+    _timer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    String formattedTime =
+        "${now.hour % 12 == 0 ? 12 : now.hour % 12}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} ${now.hour >= 12 ? 'PM' : 'AM'}";
+
+    String formattedDate =
+        "${monthNames[now.month - 1]} ${now.day.toString().padLeft(2, '0')}, ${now.year} | ${_getDayOfWeek(now.weekday)}";
+
     return Scaffold(
       backgroundColor: whiteColor,
       body: Column(
@@ -76,7 +133,7 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: -70,
+                  bottom: -90,
                   left: -330,
                   child: Image.asset(
                     'assets/images/4-pillars.png',
@@ -85,53 +142,54 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                   ),
                 ),
                 Positioned(
-                  top: 80,
+                  bottom: -10,
                   right: -291,
                   child: Image.asset(
                     'assets/images/line1.png',
                   ),
                 ),
                 Positioned(
-                  top: 90,
+                  top: 0,
                   left: -231,
                   child: Image.asset(
                     'assets/images/line3.png',
                     height: 300,
                   ),
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 50,
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 100,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: blueColor.withOpacity(0.1),
-                        ),
-                      ),
-                      const Text(
-                        "Download the app now!",
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // Positioned(
+                //   left: 0,
+                //   right: 0,
+                //   bottom: 50,
+                //   child: Column(
+                //     children: [
+                //       Container(
+                //         height: 100,
+                //         width: 100,
+                //         decoration: BoxDecoration(
+                //           color: blueColor.withOpacity(0.1),
+                //         ),
+                //       ),
+                //       const Text(
+                //         "Download the app now!",
+                //         style: TextStyle(
+                //           fontSize: 10,
+                //           fontWeight: FontWeight.w400,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 Padding(
                   padding: const EdgeInsets.only(top: 50),
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: Image.asset(
                       "assets/images/Logo.png",
+                      color: blueColor,
                       width: 35,
                     ),
                   ),
-                ),
+                ).animate().fade(delay: const Duration(milliseconds: 200)),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -142,31 +200,47 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    ).animate().fade(delay: const Duration(milliseconds: 200)),
+                    // const SizedBox(
+                    //   height: 10,
+                    // ),
                     Center(
-                      child: TweenAnimationBuilder<int>(
-                        tween: IntTween(
-                          begin: 0,
-                          end: totalParkingCount,
-                        ),
-                        duration: const Duration(seconds: 1),
-                        builder: (context, value, child) {
-                          return Text(
-                            value.toString(),
-                            style: const TextStyle(
-                              fontSize: 120,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        },
-                      ),
+                      child: _isLoading
+                          ? Container(
+                              margin: const EdgeInsets.symmetric(vertical: 45),
+                              // height: 150,
+                              child: LoadingAnimationWidget.waveDots(
+                                color: blueColor,
+                                size: 90,
+                              ),
+                            )
+                              .animate()
+                              .fade(delay: const Duration(milliseconds: 100))
+                          : TweenAnimationBuilder<int>(
+                              tween: IntTween(
+                                begin: 0,
+                                end: totalParkingCount,
+                              ),
+                              duration: const Duration(seconds: 1),
+                              builder: (context, value, child) {
+                                return Text(
+                                  value == 0 ? 'FULL' : value.toString(),
+                                  style: TextStyle(
+                                    fontSize: 120,
+                                    fontWeight: FontWeight.bold,
+                                    color: value == 0
+                                        ? parkingRedColor
+                                        : blackColor,
+                                  ),
+                                );
+                              },
+                            )
+                              .animate()
+                              .fade(delay: const Duration(milliseconds: 100)),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    // const SizedBox(
+                    //   height: 20,
+                    // ),
                     const Text(
                       "Approximately",
                       style: TextStyle(
@@ -174,8 +248,38 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                         fontWeight: FontWeight.w300,
                         fontStyle: FontStyle.italic,
                       ),
-                    ),
+                    ).animate().fade(delay: const Duration(milliseconds: 200)),
                   ],
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 50,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Wrap(
+                      direction: Axis.vertical,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          formattedTime,
+                          style: const TextStyle(
+                            color: blackColor,
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          formattedDate,
+                          style: const TextStyle(
+                            color: blackColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ).animate().fade(delay: const Duration(milliseconds: 200)),
+                  ),
                 ),
                 Positioned(
                   left: 10,
