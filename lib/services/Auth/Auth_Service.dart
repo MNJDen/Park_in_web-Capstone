@@ -30,7 +30,7 @@ class AuthService {
       case 'weak-password':
         return 'The password is too weak.';
       default:
-        return 'An unknown error occurred. Please try again later.';
+        return 'Incorrect Credentials.';
     }
   }
 
