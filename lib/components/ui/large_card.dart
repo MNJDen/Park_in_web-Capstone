@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -120,7 +121,7 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Parking Spaces Per User",
+                  "Parking Spaces",
                   style: TextStyle(
                     color: blackColor,
                     fontSize: 20,
@@ -151,37 +152,19 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                     padding: const EdgeInsets.all(20),
                     height: MediaQuery.of(context).size.height * 0.238,
                     decoration: BoxDecoration(
-                      color: bgColor.withOpacity(0.05),
+                      color: bgColor.withOpacity(0.03),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Student",
-                              style: TextStyle(
-                                color: blackColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 255, 0, 212)
-                                    .withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.person_rounded,
-                                color: blackColor,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          "Student",
+                          style: TextStyle(
+                            color: blackColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Expanded(
@@ -189,6 +172,15 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                               ? BarChart(
                                   BarChartData(
                                     alignment: BarChartAlignment.spaceAround,
+                                    gridData: const FlGridData(
+                                        drawVerticalLine: false),
+                                    barTouchData: BarTouchData(
+                                      touchTooltipData: BarTouchTooltipData(
+                                        getTooltipColor: (group) {
+                                          return bgColor;
+                                        },
+                                      ),
+                                    ),
                                     barGroups:
                                         studentParkingData.entries.map((entry) {
                                       return BarChartGroupData(
@@ -199,8 +191,7 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                           BarChartRodData(
                                             toY: entry.value.toDouble(),
                                             width: 35,
-                                            color: const Color.fromARGB(
-                                                234, 155, 154, 255),
+                                            color: blueColor,
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           )
@@ -239,9 +230,11 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                     ),
                                     borderData: FlBorderData(show: false),
                                   ),
-                                )
+                                ).animate().fade(
+                                  delay: const Duration(milliseconds: 350))
                               : const Center(
-                                  child: CircularProgressIndicator()),
+                                  child: CircularProgressIndicator(),
+                                ),
                         ),
                       ],
                     ),
@@ -255,37 +248,19 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                     padding: const EdgeInsets.all(20),
                     height: MediaQuery.of(context).size.height * 0.238,
                     decoration: BoxDecoration(
-                      color: bgColor.withOpacity(0.05),
+                      color: bgColor.withOpacity(0.03),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Employee",
-                              style: TextStyle(
-                                color: blackColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 255, 0, 212)
-                                    .withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.supervised_user_circle_rounded,
-                                color: blackColor,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          "Employee",
+                          style: TextStyle(
+                            color: blackColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Expanded(
@@ -293,6 +268,15 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                               ? BarChart(
                                   BarChartData(
                                     alignment: BarChartAlignment.spaceAround,
+                                    gridData: const FlGridData(
+                                        drawVerticalLine: false),
+                                    barTouchData: BarTouchData(
+                                      touchTooltipData: BarTouchTooltipData(
+                                        getTooltipColor: (group) {
+                                          return bgColor;
+                                        },
+                                      ),
+                                    ),
                                     barGroups: employeeParkingData.entries
                                         .map((entry) {
                                       return BarChartGroupData(
@@ -303,8 +287,7 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                           BarChartRodData(
                                             toY: entry.value.toDouble(),
                                             width: 35,
-                                            color: const Color.fromARGB(
-                                                234, 155, 154, 255),
+                                            color: blueColor,
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           )
@@ -343,9 +326,11 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                     ),
                                     borderData: FlBorderData(show: false),
                                   ),
-                                )
+                                ).animate().fade(
+                                  delay: const Duration(milliseconds: 350))
                               : const Center(
-                                  child: CircularProgressIndicator()),
+                                  child: CircularProgressIndicator(),
+                                ),
                         ),
                       ],
                     ),
@@ -359,37 +344,19 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                     padding: const EdgeInsets.all(20),
                     height: MediaQuery.of(context).size.height * 0.238,
                     decoration: BoxDecoration(
-                      color: bgColor.withOpacity(0.05),
+                      color: bgColor.withOpacity(0.03),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Two-Wheels",
-                              style: TextStyle(
-                                color: blackColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 162, 0, 255)
-                                    .withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.two_wheeler_rounded,
-                                color: blackColor,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          "Two-Wheels",
+                          style: TextStyle(
+                            color: blackColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Expanded(
@@ -397,6 +364,15 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                               ? BarChart(
                                   BarChartData(
                                     alignment: BarChartAlignment.spaceAround,
+                                    gridData: const FlGridData(
+                                        drawVerticalLine: false),
+                                    barTouchData: BarTouchData(
+                                      touchTooltipData: BarTouchTooltipData(
+                                        getTooltipColor: (group) {
+                                          return bgColor;
+                                        },
+                                      ),
+                                    ),
                                     barGroups: twoWheelsParkingData.entries
                                         .map((entry) {
                                       return BarChartGroupData(
@@ -407,8 +383,7 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                           BarChartRodData(
                                             toY: entry.value.toDouble(),
                                             width: 35,
-                                            color: const Color.fromARGB(
-                                                234, 155, 154, 255),
+                                            color: blueColor,
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           )
@@ -447,9 +422,11 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                     ),
                                     borderData: FlBorderData(show: false),
                                   ),
-                                )
+                                ).animate().fade(
+                                  delay: const Duration(milliseconds: 350))
                               : const Center(
-                                  child: CircularProgressIndicator()),
+                                  child: CircularProgressIndicator(),
+                                ),
                         ),
                       ],
                     ),
