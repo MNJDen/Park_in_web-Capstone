@@ -7,8 +7,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "site": "park-in-capstone-b68c6",
-    "public": "web",
+    "public": "build/web",
     "ignore": [
       "firebase.json",
       "**/.*",
