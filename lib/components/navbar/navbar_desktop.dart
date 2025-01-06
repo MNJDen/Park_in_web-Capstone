@@ -61,47 +61,79 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
           ),
           content: const SizedBox(
             height: 40,
-            child: Text('Are you sure you want to exit?'),
+            child: Text(
+              'Are you sure you want to exit?',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: blackColor,
+              ),
+            ),
           ),
           actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: blueColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            Column(
+              children: [
+                SizedBox(
+                  height: 52,
+                  width: double.infinity,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: blueColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: whiteColor,
+                      ),
+                    ),
+                    onPressed: () async {
+                      try {
+                        await authService.signOut();
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('isLoggedIn', false);
+                        await prefs.remove('userType');
+
+                        // Navigate to SignInMain and update URL
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/sign-in',
+                          (Route<dynamic> route) => false,
+                        );
+                      } finally {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
+                    },
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Sign Out',
-                style: TextStyle(color: whiteColor),
-              ),
-              onPressed: () async {
-                try {
-                  await authService.signOut();
-
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setBool('isLoggedIn', false);
-                  await prefs.remove('userType');
-
-                  // Navigate to SignInMain and update URL
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/sign-in',
-                    (Route<dynamic> route) => false,
-                  );
-                } finally {
-                  setState(() {
-                    _isLoading = false;
-                  });
-                }
-              },
-            ),
+                const SizedBox(
+                  height: 12,
+                ),
+                SizedBox(
+                  height: 52,
+                  width: double.infinity,
+                  child: TextButton(
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: blackColor,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            )
           ],
         );
       },
@@ -124,6 +156,7 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
             spacing: 20,
             children: [
               Container(
+                padding: const EdgeInsets.only(left: 2),
                 height: 40,
                 width: 40,
                 decoration: BoxDecoration(
@@ -153,7 +186,7 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
             thickness: 0.5,
             color: whiteColor.withOpacity(0.2),
           ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.025),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,14 +197,14 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
                   isSelected: _selectedPage == '/dashboard',
                   onTap: () => _onItemTap("Dashboard"),
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 _NavbarDesktopItem(
                   title: "Reports",
                   icon: Icons.flag_rounded,
                   isSelected: _selectedPage == '/reports',
                   onTap: () => _onItemTap("Reports"),
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 _NavbarDesktopItem(
                   title: "Tickets Issued",
                   icon: Icons.receipt_long_rounded,
@@ -182,12 +215,12 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
             ),
           ),
           _NavbarDesktopItem(
-            title: "View",
+            title: "Live View",
             icon: Icons.tv_rounded,
             isSelected: _selectedPage == '/view',
             onTap: () => _onItemTap("View"),
           ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.01),
           Divider(
             thickness: 0.5,
             color: whiteColor.withOpacity(0.2),
@@ -236,28 +269,36 @@ class _NavbarDesktopItemState extends State<_NavbarDesktopItem> {
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
           opacity: _isHovered || widget.isSelected ? 1.0 : 0.7,
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            children: [
-              Icon(
-                widget.icon,
-                color: widget.isSelected || _isHovered
-                    ? blueColor
-                    : whiteColor.withOpacity(0.3),
-              ),
-              Text(
-                widget.title,
-                style: TextStyle(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: widget.isSelected ? blueColor : Colors.transparent,
+            ),
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              children: [
+                Icon(
+                  widget.icon,
                   color: widget.isSelected || _isHovered
-                      ? blueColor
+                      ? whiteColor
                       : whiteColor.withOpacity(0.3),
-                  fontSize: 16,
-                  fontWeight:
-                      widget.isSelected ? FontWeight.w500 : FontWeight.normal,
                 ),
-              ),
-            ],
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    color: widget.isSelected || _isHovered
+                        ? whiteColor
+                        : whiteColor.withOpacity(0.3),
+                    fontSize: 16,
+                    fontWeight:
+                        widget.isSelected ? FontWeight.w500 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
