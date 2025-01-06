@@ -17,9 +17,14 @@ class SignInMobileScreen extends StatefulWidget {
 class _SignInMobileScreenState extends State<SignInMobileScreen> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passwordCtrl = TextEditingController();
+  bool _isLoading = false;
 
   void login(BuildContext context) async {
     final authService = AuthService();
+
+    setState(() {
+      _isLoading = true;
+    });
 
     if (_emailCtrl.text.isEmpty || _passwordCtrl.text.isEmpty) {
       errorSnackbar(
@@ -27,6 +32,9 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
         "Please fill out all fields.",
         MediaQuery.of(context).size.width * 0.9,
       );
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
@@ -66,6 +74,10 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
           MediaQuery.of(context).size.width * 0.9,
         );
       }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -125,7 +137,7 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
                   ),
                 ),
                 Positioned(
-                  top: -30,
+                  top: -35,
                   left: -161,
                   child: Image.asset(
                     'assets/images/4-pillars.png',
@@ -164,7 +176,7 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
                         ),
                       ),
                       const SizedBox(
-                        height: 120,
+                        height: 90,
                       ),
                       const Text(
                         "Sign In",
@@ -201,10 +213,8 @@ class _SignInMobileScreenState extends State<SignInMobileScreen> {
                       const Spacer(),
                       PRKPrimaryBtn(
                         label: "Sign In",
-                        onPressed: () {
-                          login(context);
-                          // Navigator.pushNamed(context, '/reports');
-                        },
+                        onPressed: () => login(context),
+                        isLoading: _isLoading,
                       ),
                       const SizedBox(
                         height: 140,
