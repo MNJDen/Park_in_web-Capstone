@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 
 class PRKLargeCardMobile extends StatefulWidget {
@@ -122,7 +123,7 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Parking Spaces Per User",
+                "Parking Spaces",
                 style: TextStyle(
                   color: blackColor,
                   fontSize: 20,
@@ -150,36 +151,23 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
             padding: const EdgeInsets.all(20),
             height: MediaQuery.of(context).size.height * 0.238,
             decoration: BoxDecoration(
-              color: bgColor.withOpacity(0.05),
+              color: bgColor.withOpacity(0.03),
               borderRadius: BorderRadius.circular(5),
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const Row(
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Student",
                       style: TextStyle(
                         color: blackColor,
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(157, 255, 0, 1)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: blackColor,
-                      ),
-                    )
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -188,6 +176,14 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                       ? BarChart(
                           BarChartData(
                             alignment: BarChartAlignment.spaceAround,
+                            gridData: const FlGridData(drawVerticalLine: false),
+                            barTouchData: BarTouchData(
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipColor: (group) {
+                                  return bgColor;
+                                },
+                              ),
+                            ),
                             barGroups: studentParkingData.entries.map((entry) {
                               return BarChartGroupData(
                                 x: studentParkingData.keys
@@ -197,8 +193,7 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                                   BarChartRodData(
                                     toY: entry.value.toDouble(),
                                     width: 16,
-                                    color: const Color.fromARGB(
-                                        234, 155, 154, 255),
+                                    color: blueColor,
                                     borderRadius: BorderRadius.circular(4),
                                   )
                                 ],
@@ -219,7 +214,7 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                                       return Text(
                                         studentParkingData.keys
                                             .elementAt(index),
-                                        style: const TextStyle(fontSize: 5),
+                                        style: const TextStyle(fontSize: 6),
                                       );
                                     }
                                     return const Text('');
@@ -233,7 +228,11 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                             borderData: FlBorderData(show: false),
                           ),
                         )
-                      : const Center(child: CircularProgressIndicator()),
+                          .animate()
+                          .fade(delay: const Duration(milliseconds: 350))
+                      : const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                 ),
               ],
             ),
@@ -245,36 +244,23 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
             padding: const EdgeInsets.all(20),
             height: MediaQuery.of(context).size.height * 0.238,
             decoration: BoxDecoration(
-              color: bgColor.withOpacity(0.05),
+              color: bgColor.withOpacity(0.03),
               borderRadius: BorderRadius.circular(5),
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const Row(
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Employee",
                       style: TextStyle(
                         color: blackColor,
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 255, 0, 212)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.supervised_user_circle_rounded,
-                        color: blackColor,
-                      ),
-                    )
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -283,6 +269,14 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                       ? BarChart(
                           BarChartData(
                             alignment: BarChartAlignment.spaceAround,
+                            gridData: const FlGridData(drawVerticalLine: false),
+                            barTouchData: BarTouchData(
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipColor: (group) {
+                                  return bgColor;
+                                },
+                              ),
+                            ),
                             barGroups: employeeParkingData.entries.map((entry) {
                               return BarChartGroupData(
                                 x: employeeParkingData.keys
@@ -292,8 +286,7 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                                   BarChartRodData(
                                     toY: entry.value.toDouble(),
                                     width: 16,
-                                    color: const Color.fromARGB(
-                                        234, 155, 154, 255),
+                                    color: blueColor,
                                     borderRadius: BorderRadius.circular(4),
                                   )
                                 ],
@@ -328,6 +321,8 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                             borderData: FlBorderData(show: false),
                           ),
                         )
+                          .animate()
+                          .fade(delay: const Duration(milliseconds: 350))
                       : const Center(child: CircularProgressIndicator()),
                 ),
               ],
@@ -340,36 +335,23 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
             padding: const EdgeInsets.all(20),
             height: MediaQuery.of(context).size.height * 0.238,
             decoration: BoxDecoration(
-              color: bgColor.withOpacity(0.05),
+              color: bgColor.withOpacity(0.03),
               borderRadius: BorderRadius.circular(5),
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const Row(
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Two-Wheels",
                       style: TextStyle(
                         color: blackColor,
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 162, 0, 255)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.two_wheeler_rounded,
-                        color: blackColor,
-                      ),
-                    )
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -378,6 +360,14 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                       ? BarChart(
                           BarChartData(
                             alignment: BarChartAlignment.spaceAround,
+                            gridData: const FlGridData(drawVerticalLine: false),
+                            barTouchData: BarTouchData(
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipColor: (group) {
+                                  return bgColor;
+                                },
+                              ),
+                            ),
                             barGroups:
                                 twoWheelsParkingData.entries.map((entry) {
                               return BarChartGroupData(
@@ -388,8 +378,7 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                                   BarChartRodData(
                                     toY: entry.value.toDouble(),
                                     width: 16,
-                                    color: const Color.fromARGB(
-                                        234, 155, 154, 255),
+                                    color: blueColor,
                                     borderRadius: BorderRadius.circular(4),
                                   )
                                 ],
@@ -424,6 +413,8 @@ class _PRKLargeCardMobileState extends State<PRKLargeCardMobile> {
                             borderData: FlBorderData(show: false),
                           ),
                         )
+                          .animate()
+                          .fade(delay: const Duration(milliseconds: 350))
                       : const Center(child: CircularProgressIndicator()),
                 ),
               ],
