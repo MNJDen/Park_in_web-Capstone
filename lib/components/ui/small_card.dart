@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class PRKSmallCard extends StatefulWidget {
   final String label;
@@ -114,7 +115,7 @@ class _PRKSmallCardState extends State<PRKSmallCard> {
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
+                  ).animate().fade(delay: const Duration(milliseconds: 350)),
                   Text(
                     widget.sub,
                     style: const TextStyle(
