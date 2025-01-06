@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:park_in_web/components/navbar/navbar_desktop.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:park_in_web/components/ui/large_card.dart';
 import 'package:park_in_web/components/ui/small_card.dart';
+import 'package:park_in_web/components/ui/today_card.dart';
 import 'package:park_in_web/components/ui/users_card.dart';
 
 class DashboardDesktopScreen extends StatefulWidget {
@@ -21,6 +23,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
       FirebaseFirestore.instance.collection("Violation Ticket");
   final CollectionReference _incidentReports =
       FirebaseFirestore.instance.collection("Incident Report");
+  String _selectedPage = '';
 
   Map<String, int> _calculateCounts(Map<dynamic, dynamic> data) {
     int tempTwoWheelsCount = 0;
@@ -44,6 +47,19 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    void _onItemTap(String page) {
+      String targetRoute = '/${page.toLowerCase().replaceAll(' ', '-')}';
+      if (_selectedPage != targetRoute) {
+        setState(() {
+          _selectedPage = targetRoute;
+        });
+
+        Navigator.pushNamed(context, targetRoute).then((_) {
+          setState(() {});
+        });
+      }
+    }
+
     return Scaffold(
       backgroundColor: bgColor,
       body: Padding(
@@ -75,7 +91,9 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                             children: [
                               PRKSmallCard(
                                 label: "Two-Wheels",
-                                content: "${counts['twoWheelsCount']}",
+                                content: counts['twoWheelsCount'] == 0
+                                    ? "Full"
+                                    : "${counts['twoWheelsCount']}",
                                 sub: "Parking spaces available",
                                 height:
                                     MediaQuery.of(context).size.height * 0.2,
@@ -87,7 +105,9 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                                       0.009),
                               PRKSmallCard(
                                 label: "Four-Wheels",
-                                content: "${counts['fourWheelsCount']}",
+                                content: counts['fourWheelsCount'] == 0
+                                    ? "Full"
+                                    : "${counts['fourWheelsCount']}",
                                 sub: "Parking spaces available",
                                 height:
                                     MediaQuery.of(context).size.height * 0.2,
@@ -111,7 +131,9 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                                     sub: "Infractions committed",
                                     height: MediaQuery.of(context).size.height *
                                         0.2,
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      _onItemTap('Tickets Issued');
+                                    },
                                   );
                                 },
                               ),
@@ -132,7 +154,9 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                                     sub: "Received Reports",
                                     height: MediaQuery.of(context).size.height *
                                         0.2,
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      _onItemTap('Reports');
+                                    },
                                   );
                                 },
                               ),
@@ -143,7 +167,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                             children: [
                               PRKSmallCard(
                                 label: "Two-Wheels",
-                                content: "Loading...",
+                                content: "...",
                                 sub: "Parking spaces available",
                                 height:
                                     MediaQuery.of(context).size.height * 0.2,
@@ -155,7 +179,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                                       0.009),
                               PRKSmallCard(
                                 label: "Four-Wheels",
-                                content: "Loading...",
+                                content: "...",
                                 sub: "Parking spaces available",
                                 height:
                                     MediaQuery.of(context).size.height * 0.2,
@@ -167,7 +191,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                                       0.009),
                               PRKSmallCard(
                                 label: "Violations",
-                                content: "Loading...",
+                                content: "...",
                                 sub: "Infractions committed",
                                 height:
                                     MediaQuery.of(context).size.height * 0.2,
@@ -178,7 +202,7 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                                       0.009),
                               PRKSmallCard(
                                 label: "Reports",
-                                content: "Loading...",
+                                content: "...",
                                 sub: "Received Reports",
                                 height:
                                     MediaQuery.of(context).size.height * 0.2,
@@ -188,7 +212,19 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                           );
                         }
                       },
-                    ),
+                    )
+                        .animate()
+                        .fade(
+                          delay: const Duration(
+                            milliseconds: 100,
+                          ),
+                        )
+                        .moveY(
+                          begin: 10,
+                          end: 0,
+                          curve: Curves.fastEaseInToSlowEaseOut,
+                          duration: const Duration(milliseconds: 250),
+                        ),
                     SizedBox(
                         height: MediaQuery.of(context).size.height * 0.015),
                     Row(
@@ -196,69 +232,38 @@ class _DashboardDesktopScreenState extends State<DashboardDesktopScreen> {
                         const PRKUserCard(),
                         SizedBox(
                             width: MediaQuery.of(context).size.width * 0.009),
-                        Expanded(
-                          child: Container(
-                            height: MediaQuery.of(context).size.height * 0.33,
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: whiteColor,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: blackColor.withOpacity(0.1),
-                                  width: 0.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: blackColor.withOpacity(0.05),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Peak Hours",
-                                      style: TextStyle(
-                                        color: blackColor,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Container(
-                                      height: 40,
-                                      width: 40,
-                                      decoration: BoxDecoration(
-                                        color:
-                                            parkingOrangeColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Icon(
-                                        Icons.access_time_filled_rounded,
-                                        color: blackColor,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.005,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        const PRKTodayCard(),
                       ],
-                    ),
+                    )
+                        .animate()
+                        .fade(
+                          delay: const Duration(
+                            milliseconds: 200,
+                          ),
+                        )
+                        .moveY(
+                          begin: 10,
+                          end: 0,
+                          curve: Curves.fastEaseInToSlowEaseOut,
+                          duration: const Duration(milliseconds: 450),
+                        ),
                     SizedBox(
                         height: MediaQuery.of(context).size.height * 0.015),
                     const Row(
                       children: [PRKLargeCard()],
                     )
+                        .animate()
+                        .fade(
+                          delay: const Duration(
+                            milliseconds: 300,
+                          ),
+                        )
+                        .moveY(
+                          begin: 10,
+                          end: 0,
+                          curve: Curves.fastEaseInToSlowEaseOut,
+                          duration: const Duration(milliseconds: 650),
+                        )
                   ],
                 ),
               ),
