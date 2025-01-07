@@ -423,36 +423,66 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
       key: _scaffoldKey,
       backgroundColor: bgColor,
       drawer: Drawer(
-        backgroundColor: whiteColor,
+        backgroundColor: bgColor,
         child: Column(
           children: <Widget>[
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    "assets/images/bg1.png",
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Center(
-                child: Image.asset(
-                  "assets/images/Logo.png",
-                  width: 30,
-                ),
-              ),
-            ),
             Flexible(
               child: ListView(
                 physics: const NeverScrollableScrollPhysics(),
                 padding: EdgeInsets.zero,
                 children: <Widget>[
+                  GestureDetector(
+                    onTap: () {
+                      _onItemTap("Dashboard");
+                      _selectedPage == '/dashboard';
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 40),
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        alignment: WrapAlignment.start,
+                        spacing: 20,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(left: 2),
+                            height: 40,
+                            width: 40,
+                            decoration: BoxDecoration(
+                              color: blueColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                "assets/images/Logo.png",
+                                width: 18,
+                                color: whiteColor,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            "Park-in",
+                            style: TextStyle(
+                              color: whiteColor,
+                              fontSize: 24,
+                              fontFamily: "Hiruko Pro",
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
                   ListTile(
                     leading: const Icon(
                       Icons.dashboard_outlined,
-                      color: blackColor,
+                      color: whiteColor,
                     ),
-                    title: const Text('Dashboard'),
+                    title: const Text(
+                      'Dashboard',
+                      style: TextStyle(
+                        color: whiteColor,
+                      ),
+                    ),
                     onTap: () {
                       _onItemTap('Dashboard');
                     },
@@ -460,9 +490,14 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                   ListTile(
                     leading: const Icon(
                       Icons.flag_outlined,
-                      color: blackColor,
+                      color: whiteColor,
                     ),
-                    title: const Text('Reports'),
+                    title: const Text(
+                      'Reports',
+                      style: TextStyle(
+                        color: whiteColor,
+                      ),
+                    ),
                     onTap: () {
                       _onItemTap('Reports');
                     },
@@ -470,9 +505,14 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                   ListTile(
                     leading: const Icon(
                       Icons.receipt_long_outlined,
-                      color: blackColor,
+                      color: whiteColor,
                     ),
-                    title: const Text('Tickets Issued'),
+                    title: const Text(
+                      'Tickets Issued',
+                      style: TextStyle(
+                        color: whiteColor,
+                      ),
+                    ),
                     onTap: () {
                       _onItemTap('Tickets Issued');
                     },
@@ -483,14 +523,20 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
             ListTile(
               leading: const Icon(
                 Icons.tv_rounded,
-                color: blackColor,
+                color: whiteColor,
               ),
-              title: const Text('Live View'),
+              title: const Text(
+                'Live View',
+                style: TextStyle(
+                  color: whiteColor,
+                ),
+              ),
               onTap: () {
                 _onItemTap('View');
               },
             ),
             const Divider(
+              color: whiteColor,
               thickness: 0.5,
             ),
             Padding(
@@ -581,47 +627,16 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Wrap(
+                      const Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 8,
                         children: [
-                          Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
-                            child: Container(
-                              width: 40,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10)
-                                  // shape: BoxShape.circle,
-                                  ),
-                            ),
-                          ),
-                          Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
-                            child: Container(
-                              width: 40,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10)
-                                  // shape: BoxShape.circle,
-                                  ),
-                            ),
-                          ),
-                          Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
-                            child: Container(
-                              width: 40,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10)
-                                  // shape: BoxShape.circle,
-                                  ),
+                          Text(
+                            "Filters",
+                            style: TextStyle(
+                              color: blackColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
