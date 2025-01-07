@@ -387,11 +387,11 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Wrap(
+                              const Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 spacing: 12,
                                 children: [
-                                  const Text(
+                                  Text(
                                     "Filters",
                                     style: TextStyle(
                                       color: blackColor,
@@ -399,48 +399,7 @@ class _ReportsDesktopScreenState extends State<ReportsDesktopScreen> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(
-                                      width: 120,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(10)
-                                          // shape: BoxShape.circle,
-                                          ),
-                                    ),
-                                  ),
-                                  Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(
-                                      width: 120,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(10)
-                                          // shape: BoxShape.circle,
-                                          ),
-                                    ),
-                                  ),
-                                  Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(
-                                      width: 120,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(10)
-                                          // shape: BoxShape.circle,
-                                          ),
-                                    ),
-                                  )
+                                  // 
                                 ],
                               ),
                               PRKIconButton(
