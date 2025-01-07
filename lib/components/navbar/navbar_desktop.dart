@@ -150,36 +150,45 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.start,
-            spacing: 20,
-            children: [
-              Container(
-                padding: const EdgeInsets.only(left: 2),
-                height: 40,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: blueColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Image.asset(
-                    "assets/images/Logo.png",
-                    width: 18,
-                    color: whiteColor,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () {
+                _onItemTap("Dashboard");
+                _selectedPage == '/dashboard';
+              },
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.start,
+                spacing: 20,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(left: 2),
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: blueColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        "assets/images/Logo.png",
+                        width: 18,
+                        color: whiteColor,
+                      ),
+                    ),
                   ),
-                ),
+                  const Text(
+                    "Park-in",
+                    style: TextStyle(
+                      color: whiteColor,
+                      fontSize: 24,
+                      fontFamily: "Hiruko Pro",
+                    ),
+                  )
+                ],
               ),
-              const Text(
-                "Park-in",
-                style: TextStyle(
-                  color: whiteColor,
-                  fontSize: 24,
-                  fontFamily: "Hiruko Pro",
-                ),
-              )
-            ],
+            ),
           ),
           SizedBox(height: MediaQuery.of(context).size.height * 0.025),
           Divider(
@@ -284,14 +293,14 @@ class _NavbarDesktopItemState extends State<_NavbarDesktopItem> {
                   widget.icon,
                   color: widget.isSelected || _isHovered
                       ? whiteColor
-                      : whiteColor.withOpacity(0.3),
+                      : whiteColor.withOpacity(0.5),
                 ),
                 Text(
                   widget.title,
                   style: TextStyle(
                     color: widget.isSelected || _isHovered
                         ? whiteColor
-                        : whiteColor.withOpacity(0.3),
+                        : whiteColor.withOpacity(0.5),
                     fontSize: 16,
                     fontWeight:
                         widget.isSelected ? FontWeight.w500 : FontWeight.normal,
