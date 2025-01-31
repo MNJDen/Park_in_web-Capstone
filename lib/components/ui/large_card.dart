@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:park_in_web/components/theme/color_scheme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -232,8 +233,11 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                   ),
                                 ).animate().fade(
                                   delay: const Duration(milliseconds: 350))
-                              : const Center(
-                                  child: CircularProgressIndicator(),
+                              : Center(
+                                  child: LoadingAnimationWidget.waveDots(
+                                    color: blueColor,
+                                    size: 30,
+                                  ),
                                 ),
                         ),
                       ],
@@ -328,8 +332,11 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                   ),
                                 ).animate().fade(
                                   delay: const Duration(milliseconds: 350))
-                              : const Center(
-                                  child: CircularProgressIndicator(),
+                              : Center(
+                                  child: LoadingAnimationWidget.waveDots(
+                                    color: blueColor,
+                                    size: 30,
+                                  ),
                                 ),
                         ),
                       ],
@@ -424,8 +431,11 @@ class _PRKLargeCardState extends State<PRKLargeCard> {
                                   ),
                                 ).animate().fade(
                                   delay: const Duration(milliseconds: 350))
-                              : const Center(
-                                  child: CircularProgressIndicator(),
+                              : Center(
+                                  child: LoadingAnimationWidget.waveDots(
+                                    color: blueColor,
+                                    size: 30,
+                                  ),
                                 ),
                         ),
                       ],
