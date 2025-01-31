@@ -489,6 +489,21 @@ class _ReportsMobileScreenState extends State<ReportsMobileScreen> {
                   ),
                   ListTile(
                     leading: const Icon(
+                      Icons.people_rounded,
+                      color: whiteColor,
+                    ),
+                    title: const Text(
+                      'Users',
+                      style: TextStyle(
+                        color: whiteColor,
+                      ),
+                    ),
+                    onTap: () {
+                      _onItemTap('Users');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
                       Icons.flag_outlined,
                       color: whiteColor,
                     ),
