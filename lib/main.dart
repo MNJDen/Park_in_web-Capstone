@@ -6,6 +6,7 @@ import 'package:park_in_web/screens/dashboard_main.dart';
 import 'package:park_in_web/screens/report_main.dart';
 import 'package:park_in_web/screens/sign_in_main.dart';
 import 'package:park_in_web/screens/tickets_main.dart';
+import 'package:park_in_web/screens/users_main.dart';
 import 'package:park_in_web/screens/view_main.dart';
 
 void main() async {
@@ -55,6 +56,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/sign-in': (context) => const SignInMain(),
         '/dashboard': (context) => const DashboardMain(),
+        '/users': (context) => const UsersMain(),
         '/reports': (context) => const ReportMain(),
         '/tickets-issued': (context) => const TicketsMain(),
         '/view': (context) => const ViewMain(),
