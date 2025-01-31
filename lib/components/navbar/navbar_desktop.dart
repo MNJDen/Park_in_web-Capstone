@@ -208,6 +208,13 @@ class _NavbarDesktopState extends State<NavbarDesktop> {
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 _NavbarDesktopItem(
+                  title: "Users",
+                  icon: Icons.people_rounded,
+                  isSelected: _selectedPage == '/users',
+                  onTap: () => _onItemTap("Users"),
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                _NavbarDesktopItem(
                   title: "Reports",
                   icon: Icons.flag_rounded,
                   isSelected: _selectedPage == '/reports',
