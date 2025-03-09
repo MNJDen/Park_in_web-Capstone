@@ -319,80 +319,168 @@ class _ViewDesktopScreenState extends State<ViewDesktopScreen> {
                         fontStyle: FontStyle.italic,
                       ),
                     ).animate().fade(delay: const Duration(milliseconds: 150)),
-                    Text(
-                      "Four Wheels: ${totalFourWheelCount == 0 ? 'FULL' : totalFourWheelCount}",
-                      style: TextStyle(
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
-                        color: totalFourWheelCount == 0
-                            ? parkingRedColor
-                            : blackColor,
-                      ),
-                    ).animate().fade(delay: const Duration(milliseconds: 100)),
-                    Text(
-                      "Two Wheels: ${totalTwoWheelCount == 0 ? 'FULL' : totalTwoWheelCount}",
-                      style: TextStyle(
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
-                        color: totalTwoWheelCount == 0
-                            ? parkingRedColor
-                            : blackColor,
-                      ),
-                    ).animate().fade(delay: const Duration(milliseconds: 100)),
                   ],
                 ),
-                // Positioned(
-                //   right: 10,
-                //   bottom: 10,
-                //   child: Column(
-                //     children: [
-                //       Container(
-                //         padding: const EdgeInsets.all(20),
-                //         decoration: BoxDecoration(
-                //           color: whiteColor,
-                //           borderRadius: BorderRadius.circular(10),
-                //           border: Border.all(
-                //               color: blackColor.withOpacity(0.1), width: 0.5),
-                //           boxShadow: [
-                //             BoxShadow(
-                //               color: blackColor.withOpacity(0.05),
-                //               blurRadius: 8,
-                //               offset: const Offset(0, 4),
-                //             ),
-                //           ],
-                //         ),
-                //         child: Image.asset(
-                //           "assets/images/QR.png",
-                //           height: 100,
-                //         ),
-                //       ),
-                //       Container(
-                //         padding: const EdgeInsets.all(20),
-                //         decoration: BoxDecoration(
-                //           color: blackColor,
-                //           borderRadius: BorderRadius.circular(10),
-                //           border: Border.all(
-                //               color: blackColor.withOpacity(0.1), width: 0.5),
-                //           boxShadow: [
-                //             BoxShadow(
-                //               color: blackColor.withOpacity(0.05),
-                //               blurRadius: 8,
-                //               offset: const Offset(0, 4),
-                //             ),
-                //           ],
-                //         ),
-                //         child: const Text(
-                //           "Download the app now!",
-                //           style: TextStyle(
-                //             fontSize: 12,
-                //             color: whiteColor,
-                //             fontWeight: FontWeight.w400,
-                //           ),
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
+                Positioned(
+                  right: 10,
+                  top: 0,
+                  bottom: 0,
+                  child: Column(
+                    // mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.38,
+                        width: MediaQuery.of(context).size.width * 0.18,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: whiteColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: blackColor.withOpacity(0.1), width: 0.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: blackColor.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Four Wheels",
+                                  style: TextStyle(
+                                    color: blackColor,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: blueColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.airport_shuttle_rounded,
+                                    color: blackColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "${totalFourWheelCount == 0 ? 'FULL' : totalFourWheelCount}",
+                                    style: TextStyle(
+                                      fontSize: 80,
+                                      fontWeight: FontWeight.bold,
+                                      color: totalFourWheelCount == 0
+                                          ? parkingRedColor
+                                          : blackColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+                          .animate()
+                          .moveY(
+                              begin: 50,
+                              end: 0,
+                              delay: const Duration(milliseconds: 250))
+                          .fade(delay: const Duration(milliseconds: 250)),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.01,
+                      ),
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.38,
+                        width: MediaQuery.of(context).size.width * 0.18,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: whiteColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: blackColor.withOpacity(0.1), width: 0.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: blackColor.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Two Wheels",
+                                  style: TextStyle(
+                                    color: blackColor,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: blueColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.motorcycle_rounded,
+                                    color: blackColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Expanded(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "${totalTwoWheelCount == 0 ? 'FULL' : totalTwoWheelCount}",
+                                    style: TextStyle(
+                                      fontSize: 80,
+                                      fontWeight: FontWeight.bold,
+                                      color: totalFourWheelCount == 0
+                                          ? parkingRedColor
+                                          : blackColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+                          .animate()
+                          .moveY(
+                              begin: 50,
+                              end: 0,
+                              delay: const Duration(milliseconds: 270))
+                          .fade(delay: const Duration(milliseconds: 270)),
+                    ],
+                  ),
+                ),
+
                 Positioned(
                   left: 10,
                   top: 10,
