@@ -33,22 +33,22 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _searchCtrl = TextEditingController();
 
-  // List to hold fetched tickets
-  List<Map<String, dynamic>> tickets = [];
-  List<Map<String, dynamic>> filteredTickets = [];
+  // List to hold fetched users
+  List<Map<String, dynamic>> users = [];
+  List<Map<String, dynamic>> filteredUsers = [];
   bool _isLoading = true;
   bool isExporting = false;
 
   // Tracking sorted column and sort order (ascending/descending)
   int _sortColumnIndex = 0;
   bool _isAscending = true;
-  bool isResolved = false;
-  bool isPending = false;
+  bool isVerified = false;
+  bool isNonVerified = false;
 
   @override
   void initState() {
     super.initState();
-    _listenForTicketUpdates(); // Fetch data when the screen is initialized
+    _listenForUserUpdates(); // Fetch data when the screen is initialized
     _searchCtrl.addListener(_applySearchFilter);
     fetchTotalItems();
     preloadAssets();
@@ -62,26 +62,20 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
   }
 
   // Fetch reports from Firestore
-  void _listenForTicketUpdates() {
-    _firestore.collection('Violation Ticket').snapshots().listen((snapshot) {
+  void _listenForUserUpdates() {
+    _firestore.collection('User').snapshots().listen((snapshot) {
       setState(() {
-        tickets = snapshot.docs.map((doc) {
-          Map<String, dynamic> ticketData = doc.data() as Map<String, dynamic>;
-          ticketData['docID'] = doc.id;
-          return ticketData;
+        users = snapshot.docs.map((doc) {
+          Map<String, dynamic> userData = doc.data();
+          userData['docID'] = doc.id;
+          return userData;
         }).toList();
 
-        _totalItems = tickets.length;
+        _totalItems = users.length;
 
-        // Sorting tickets by timestamp
-        tickets.sort((a, b) {
-          DateTime dateA = (a['timestamp'] as Timestamp).toDate();
-          DateTime dateB = (b['timestamp'] as Timestamp).toDate();
-          return dateA.compareTo(dateB); // Sort in ascending order
-        });
+        // Initialize filteredusers to display all users initially
+        filteredUsers = List.from(users);
 
-        // Initialize filteredTickets to display all tickets initially
-        filteredTickets = List.from(tickets);
         _isLoading = false;
       });
     });
@@ -89,59 +83,48 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
 
   void _applySearchFilter() {
     final query = _searchCtrl.text.toLowerCase();
-    final DateFormat dateFormatter = DateFormat('MM/dd/yyyy');
 
     setState(() {
       if (query.isEmpty) {
         // If search field is empty, show all tickets
-        filteredTickets = List.from(tickets);
+        filteredUsers = List.from(users);
       } else {
         // Filter tickets based on the search term
-        filteredTickets = tickets.where((ticket) {
-          final ticketedTo =
-              ticket['plate_number']?.toString().toLowerCase() ?? '';
-          final vehicleType =
-              ticket['vehicle_type']?.toString().toLowerCase() ?? '';
-          final violation = ticket['violation']?.toString().toLowerCase() ?? '';
+        filteredUsers = users.where((user) {
+          final userNumber = user['userNumber']?.toString().toLowerCase() ?? '';
+          final name = user['name']?.toString().toLowerCase() ?? '';
+          final email = user['email']?.toString().toLowerCase() ?? '';
+          final userType = user['userType']?.toString().toLowerCase() ?? '';
           final status =
-              ticket['status']?.toString().toLowerCase() ?? 'pending';
-          final timestamp = ticket['timestamp'] as Timestamp?;
-          String ticketDate = '';
-          if (timestamp != null) {
-            ticketDate = dateFormatter.format(timestamp.toDate()).toLowerCase();
-          }
+              user['status']?.toString().toLowerCase() ?? 'non-verified';
 
-          // // Debugging print statements
-          // print('Searching for: $query');
-          // print('Plate Number: $ticketedTo');
-          // print('Vehicle Type: $vehicleType');
-          // print('Violation: $violation');
-
-          return ticketedTo.contains(query) ||
-              vehicleType.contains(query) ||
-              violation.contains(query) ||
+          return userNumber.contains(query) ||
+              name.contains(query) ||
+              email.contains(query) ||
               status.contains(query) ||
-              ticketDate.contains(query);
+              userType.contains(query) ||
+              status.contains(query);
         }).toList();
       }
 
-      if (isResolved && isPending) {
-        filteredTickets = filteredTickets
-            .where((ticket) =>
-                ticket['status'] == 'Resolved' || ticket['status'] == 'Pending')
+      if (isVerified && isNonVerified) {
+        filteredUsers = filteredUsers
+            .where((user) =>
+                user['status'] == 'verified' ||
+                user['status'] == 'non-verified')
             .toList();
-      } else if (isResolved) {
-        filteredTickets = filteredTickets
-            .where((ticket) => ticket['status'] == 'Resolved')
+      } else if (isVerified) {
+        filteredUsers = filteredUsers
+            .where((user) => user['status'] == 'verified')
             .toList();
-      } else if (isPending) {
-        filteredTickets = filteredTickets
-            .where((ticket) => ticket['status'] == 'Pending')
+      } else if (isNonVerified) {
+        filteredUsers = filteredUsers
+            .where((user) => user['status'] == 'non-verified')
             .toList();
       }
 
       // set the number of total items to the length of filtered tickets
-      _totalItems = filteredTickets.length;
+      _totalItems = filteredUsers.length;
 
       // reset current page para dae mag out of bounds
       _currentPage = 0;
@@ -149,13 +132,13 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
   }
 
   // Sorting function for the columns
-  void _sort<T>(Comparable<T> Function(Map<String, dynamic> report) getField,
+  void _sort<T>(Comparable<T> Function(Map<String, dynamic> user) getField,
       int columnIndex, bool ascending) {
     setState(() {
       _sortColumnIndex = columnIndex;
       _isAscending = ascending;
 
-      filteredTickets.sort((a, b) {
+      filteredUsers.sort((a, b) {
         final fieldA = getField(a);
         final fieldB = getField(b);
         return ascending
@@ -163,17 +146,6 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
             : Comparable.compare(fieldB, fieldA);
       });
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    String? currentRoute = ModalRoute.of(context)?.settings.name;
-    if (currentRoute != null) {
-      setState(() {
-        _selectedPage = currentRoute;
-      });
-    }
   }
 
   void _onItemTap(String page) {
@@ -193,14 +165,14 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
   int _rowsPerPage = 10; // Rows per page
   int _totalItems = 0;
   bool isLoading = false;
+  int get totalPages => (_totalItems / _rowsPerPage).ceil();
 
   Future<void> fetchTotalItems() async {
     setState(() {
       isLoading = true; // Start loading
     });
     try {
-      final querySnapshot =
-          await _firestore.collection('Violation Ticket').get();
+      final querySnapshot = await _firestore.collection('User').get();
 
       _totalItems = querySnapshot.docs.length;
     } catch (e) {
@@ -211,8 +183,6 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
       });
     }
   }
-
-  int get totalPages => (_totalItems / _rowsPerPage).ceil();
 
   void logout(BuildContext context) async {
     final authService = AuthService();
@@ -296,20 +266,16 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
     final tableRows = data.map((item) {
       return [
         item['docID'] ?? '',
-        item['plate_number'] ?? '',
-        item['vehicle_type'] ?? '',
+        item['userNumber'] ?? '',
+        item['userType'] ?? '',
         pw.Container(
           width: 350,
           padding: const pw.EdgeInsets.all(5),
           child: pw.Text(
-            item['violation'] ?? '',
+            item['name'] ?? '',
           ),
         ),
         item['status'] ?? '',
-        (item['timestamp'] != null && item['timestamp'] is Timestamp)
-            ? DateFormat('dd MMM yyyy, HH:mm')
-                .format(item['timestamp'].toDate())
-            : 'N/A',
       ];
     }).toList();
 
@@ -394,39 +360,28 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                 children: [
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Ticket ID',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('Doc ID',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Ticketed To',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('User Number',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Vehicle Type',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('User Type',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Violation',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    child: pw.Text('Name',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
                     child: pw.Text('Status',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Date',
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                 ],
               ),
@@ -455,17 +410,6 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
     );
-
-    //Download the PDF
-    // final bytes = await pdf.save();
-    // final blob = html.Blob([bytes], 'application/pdf');
-    // final url = html.Url.createObjectUrlFromBlob(blob);
-    // final anchor = html.document.createElement('a') as html.AnchorElement
-    //   ..href = url
-    //   ..style.display = 'none'
-    //   ..download = '$fileName.pdf';
-    // html.document.body?.children.add(anchor);
-    // anchor.click();
   }
 
   @override
@@ -504,7 +448,8 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                       _selectedPage == '/dashboard';
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 40),
                       child: Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         alignment: WrapAlignment.start,
@@ -725,14 +670,13 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                               Transform.scale(
                                 scale: 0.9,
                                 child: Checkbox(
-                                  value: isResolved,
-                                  activeColor:
-                                      const Color.fromARGB(255, 17, 194, 1),
+                                  value: isVerified,
+                                  activeColor: parkingOrangeColor,
                                   onChanged: (bool? value) {
                                     setState(() {
-                                      isResolved = value!;
-                                      if (isResolved) {
-                                        isPending = false;
+                                      isVerified = value!;
+                                      if (isVerified) {
+                                        isNonVerified = false;
                                       }
                                       _applySearchFilter();
                                     });
@@ -740,7 +684,7 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                                 ),
                               ),
                               const Text(
-                                "Resolved",
+                                "Verified",
                                 style: TextStyle(
                                   color: blackColor,
                                   fontSize: 12,
@@ -755,13 +699,13 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                               Transform.scale(
                                 scale: 0.9,
                                 child: Checkbox(
-                                  value: isPending,
+                                  value: isNonVerified,
                                   activeColor: parkingOrangeColor,
                                   onChanged: (bool? value) {
                                     setState(() {
-                                      isPending = value!;
-                                      if (isPending) {
-                                        isResolved = false;
+                                      isNonVerified = value!;
+                                      if (isNonVerified) {
+                                        isVerified = false;
                                       }
                                       _applySearchFilter();
                                     });
@@ -769,7 +713,7 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                                 ),
                               ),
                               const Text(
-                                "Pending",
+                                "Non-Verified",
                                 style: TextStyle(
                                   color: blackColor,
                                   fontSize: 12,
@@ -792,7 +736,7 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                                   isExporting = true;
                                 });
                                 await saveDataTableToPDF(
-                                    filteredTickets, 'Violation Tickets');
+                                    filteredUsers, 'Users');
                                 setState(() {
                                   isExporting = false;
                                 });
@@ -854,36 +798,40 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                             child: DataTable(
                               columns: [
                                 DataColumn(
-                                  label: const Text("Ticket ID"),
+                                  label: const Text("User ID"),
                                   onSort: (columnIndex, ascending) =>
                                       _sort<String>(
-                                          (report) => report['docID'] ?? 0,
+                                          (user) => user['docID'] ?? 0,
                                           columnIndex,
                                           ascending),
                                 ),
                                 DataColumn(
-                                  label: const Text("Ticketed To"),
+                                  label: const Text("User Number"),
                                   onSort: (columnIndex, ascending) =>
                                       _sort<String>(
-                                          (report) =>
-                                              report['plate_number'] ?? 0,
+                                          (user) => user['userNumber'] ?? 0,
                                           columnIndex,
                                           ascending),
                                 ),
                                 DataColumn(
-                                  label: const Text("Vehicle Type"),
+                                  label: const Text("Name"),
+                                  onSort: (columnIndex, ascending) =>
+                                      _sort<String>((user) => user['name'] ?? 0,
+                                          columnIndex, ascending),
+                                ),
+                                DataColumn(
+                                  label: const Text("Mobile Number"),
                                   onSort: (columnIndex, ascending) =>
                                       _sort<String>(
-                                          (report) =>
-                                              report['vehicle_type'] ?? 0,
+                                          (user) => user['mobileNo'] ?? 0,
                                           columnIndex,
                                           ascending),
                                 ),
                                 DataColumn(
-                                  label: const Text("Violation"),
+                                  label: const Text("User Type"),
                                   onSort: (columnIndex, ascending) =>
                                       _sort<String>(
-                                          (report) => report['violation'] ?? 0,
+                                          (user) => user['userType'] ?? 0,
                                           columnIndex,
                                           ascending),
                                 ),
@@ -895,24 +843,14 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                                           columnIndex,
                                           ascending),
                                 ),
-                                DataColumn(
-                                  label: const Text("Date"),
-                                  onSort: (columnIndex, ascending) =>
-                                      _sort<DateTime>(
-                                          (report) =>
-                                              (report['timestamp'] as Timestamp)
-                                                  .toDate(),
-                                          columnIndex,
-                                          ascending),
-                                ),
                               ],
                               dataRowMinHeight:
-                                  MediaQuery.of(context).size.height * 0.02,
+                                  MediaQuery.of(context).size.height * 0.03,
                               dataRowMaxHeight:
-                                  MediaQuery.of(context).size.height * 0.066,
+                                  MediaQuery.of(context).size.height * 0.06,
                               sortColumnIndex: _sortColumnIndex,
                               sortAscending: _isAscending,
-                              rows: _buildReportRows(filteredTickets, context),
+                              rows: _buildUserRows(filteredUsers, context),
                               showCheckboxColumn: false,
                             ),
                           ),
@@ -1024,44 +962,51 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
     );
   }
 
-  List<DataRow> _buildReportRows(
-      List<Map<String, dynamic>> tickets, BuildContext context) {
-    return tickets
+  List<DataRow> _buildUserRows(
+      List<Map<String, dynamic>> users, BuildContext context) {
+    return users
         .sublist(
       _currentPage * _rowsPerPage,
-      min(_currentPage * _rowsPerPage + _rowsPerPage, tickets.length),
+      min(_currentPage * _rowsPerPage + _rowsPerPage, users.length),
     )
-        .map((ticket) {
-      final int index = tickets.indexOf(ticket);
-      final docID = ticket['docID'] ?? '';
-      final ticketedTo = ticket['plate_number'] ?? '';
-      final vehicleType = ticket['vehicle_type'] ?? '';
-      final violation = ticket['violation'] ?? '';
-      final description = ticket['description'] ?? '';
-      final status = ticket['status'] ?? 'Pending';
-      final timestamp =
-          (ticket['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-      final imageUrl1 = ticket['close_up_image_url'] ?? '';
-      final imageUrl2 = ticket['mid_shot_image_url'] ?? '';
-      final imageUrl3 = ticket['wide_shot_image_url'] ?? '';
+        .map((user) {
+      final int index = users.indexOf(user);
+      final docID = user['docID'] ?? '';
+      final userNumber = user['userNumber'] ?? '';
+      final name = user['name'] ?? '';
+      final mobileNo = user['mobileNo'] ?? '';
+      final userType = user['userType'] ?? '';
+      final plateNo = user['plateNo'] ?? '';
+      final stickerNo = user['stickerNumber'] ?? '';
+      final email = user['email'] ?? '';
+      final status = user['status'] ?? 'non-verified';
+      final imageUrl1 = user['attachment'] ?? '';
 
-      final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
-      final formattedTime = DateFormat('hh:mm a').format(timestamp);
-      final formattedDateTime = '$formattedDate at $formattedTime';
+      // final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp);
+      // final formattedTime = DateFormat('hh:mm a').format(timestamp);
+      // final formattedDateTime = '$formattedDate at $formattedTime';
 
       return DataRow(
         cells: [
           DataCell(Text(docID)),
-          DataCell(Text(ticketedTo)),
-          DataCell(Text(vehicleType)),
-          DataCell(Text(violation)),
+          DataCell(Text(userNumber)),
+          DataCell(Text(name)),
+          DataCell(Container(
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.35),
+            child: Text(
+              mobileNo,
+              style: const TextStyle(overflow: TextOverflow.fade),
+            ),
+          )),
+          DataCell(Text(userType)),
           DataCell(
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               decoration: BoxDecoration(
-                color: status == 'Resolved'
+                color: status == 'verified'
                     ? parkingGreenColor.withOpacity(0.08)
-                    : status == 'Pending'
+                    : status == 'non-verified'
                         ? parkingOrangeColor.withOpacity(0.07)
                         : blackColor,
                 borderRadius: BorderRadius.circular(100),
@@ -1070,31 +1015,31 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
                 status,
                 style: TextStyle(
                   fontWeight: FontWeight.normal,
-                  color: status == 'Resolved'
-                      ? parkingGreenColor
-                      : status == 'Pending'
+                  color: status == 'verified'
+                      ? const Color.fromARGB(255, 17, 194, 1)
+                      : status == 'non-verified'
                           ? parkingOrangeColor
                           : blackColor,
                 ),
               ),
             ),
           ),
-          DataCell(Text(formattedDateTime)),
+          // DataCell(Text(formattedDateTime)),
         ],
         onSelectChanged: (selected) {
           if (selected ?? false) {
             _modal(
               context,
               docID,
-              ticketedTo,
-              vehicleType,
-              violation,
-              description,
+              userNumber,
+              name,
+              mobileNo,
+              userType,
+              plateNo,
+              stickerNo,
+              email,
               status,
-              formattedDateTime,
               imageUrl1,
-              imageUrl2,
-              imageUrl3,
             );
           }
         },
@@ -1112,33 +1057,34 @@ class _UsersMobileScreenState extends State<UsersMobileScreen> {
 }
 
 void _modal(
-    BuildContext context,
-    String docID,
-    String plateNo,
-    String vehicleType,
-    String violation,
-    String description,
-    String status,
-    String timestamp,
-    String attachmentUrl1,
-    String attachmentUrl2,
-    String attachmentUrl3) async {
+  BuildContext context,
+  String docID,
+  String userNumber,
+  String name,
+  String mobileNo,
+  String userType,
+  List<dynamic> plateNo,
+  List<dynamic> stickerNo,
+  String email,
+  String status,
+  String attachmentUrl1,
+) async {
   // query userNumber and mobileNo based on plateNo from Firestore
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String userNumber = 'Not available';
-  String mobileNo = 'Not available';
+  // FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // String userNumber = 'Not available';
+  // String mobileNo = 'Not available';
 
   try {
-    QuerySnapshot userSnapshot = await _firestore
-        .collection('User')
-        .where('plateNo', arrayContains: plateNo)
-        .get();
+    // QuerySnapshot userSnapshot = await _firestore
+    //     .collection('User')
+    //     .where('plateNo', arrayContains: plateNo)
+    //     .get();
 
-    if (userSnapshot.docs.isNotEmpty) {
-      var userData = userSnapshot.docs.first.data() as Map<String, dynamic>;
-      userNumber = userData['userNumber'] ?? 'Not available';
-      mobileNo = userData['mobileNo'] ?? 'Not available';
-    }
+    // if (userSnapshot.docs.isNotEmpty) {
+    //   var userData = userSnapshot.docs.first.data() as Map<String, dynamic>;
+    //   userNumber = userData['userNumber'] ?? 'Not available';
+    //   mobileNo = userData['mobileNo'] ?? 'Not available';
+    // }
   } catch (e) {
     print('Error fetching user details: $e');
   }
@@ -1160,7 +1106,7 @@ void _modal(
             ),
           ),
           child: const Text(
-            "Ticket Information",
+            "User Information",
             style: TextStyle(
               color: blackColor,
               fontSize: 20,
@@ -1169,31 +1115,32 @@ void _modal(
           ),
         ),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.9,
+          width: MediaQuery.of(context).size.width * 0.3,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Wrap(
                     spacing: 4,
                     children: [
                       const Text(
-                        'Ticketed To: ',
+                        'User Number: ',
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           color: Colors.grey,
                         ),
                       ),
+                      // Text(
+                      //   plateNo,
+                      //   style: const TextStyle(
+                      //     fontWeight: FontWeight.normal,
+                      //     color: blackColor,
+                      //   ),
+                      // ),
                       Text(
-                        plateNo,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: blackColor,
-                        ),
-                      ),
-                      Text(
-                        '($userNumber)',
+                        userNumber,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
                           color: blackColor,
@@ -1201,34 +1148,18 @@ void _modal(
                       ),
                     ],
                   ),
+                  // Text(
+                  //   timestamp,
+                  //   style: TextStyle(
+                  //     fontWeight: FontWeight.normal,
+                  //     color: blackColor.withOpacity(0.5),
+                  //   ),
+                  // ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
-                children: [
-                  Wrap(
-                    spacing: 4,
-                    children: [
-                      const Text(
-                        'Date & Time: ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      Text(
-                        timestamp,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: blackColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Wrap(
                     spacing: 4,
@@ -1249,30 +1180,13 @@ void _modal(
                       ),
                     ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Wrap(
-                    spacing: 4,
-                    children: [
-                      const Text(
-                        'Vehicle Type: ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      Text(
-                        vehicleType,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: blackColor,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Text(
+                  //   userNumber,
+                  //   style: TextStyle(
+                  //     fontWeight: FontWeight.normal,
+                  //     color: blackColor.withOpacity(0.5),
+                  //   ),
+                  // ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1281,14 +1195,14 @@ void _modal(
                 crossAxisAlignment: WrapCrossAlignment.start,
                 children: [
                   const Text(
-                    'Violation: ',
+                    'Name: ',
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Colors.grey,
                     ),
                   ),
                   Text(
-                    violation,
+                    name,
                     style: const TextStyle(
                       fontWeight: FontWeight.normal,
                       color: blackColor,
@@ -1302,14 +1216,14 @@ void _modal(
                 crossAxisAlignment: WrapCrossAlignment.start,
                 children: [
                   const Text(
-                    'Description: ',
+                    'Email: ',
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Colors.grey,
                     ),
                   ),
                   Text(
-                    description,
+                    email,
                     style: const TextStyle(
                       fontWeight: FontWeight.normal,
                       color: blackColor,
@@ -1335,9 +1249,9 @@ void _modal(
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: status == 'Resolved'
+                      color: status == 'verified'
                           ? parkingGreenColor.withOpacity(0.08)
-                          : status == 'Pending'
+                          : status == 'non-verified'
                               ? parkingOrangeColor.withOpacity(0.07)
                               : blackColor,
                       borderRadius: BorderRadius.circular(100),
@@ -1346,9 +1260,9 @@ void _modal(
                       status,
                       style: TextStyle(
                         fontWeight: FontWeight.normal,
-                        color: status == 'Resolved'
-                            ? parkingGreenColor
-                            : status == 'Pending'
+                        color: status == 'verified'
+                            ? const Color.fromARGB(255, 17, 194, 1)
+                            : status == 'non-verified'
                                 ? parkingOrangeColor
                                 : blackColor,
                       ),
@@ -1365,48 +1279,16 @@ void _modal(
                 ),
               ),
               const SizedBox(height: 8),
-              for (int i = 0;
-                  i < [attachmentUrl1, attachmentUrl2, attachmentUrl3].length;
-                  i++)
-                if ([attachmentUrl1, attachmentUrl2, attachmentUrl3][i]
-                    .isNotEmpty)
-                  Column(
-                    children: [
-                      HoverableImage(
-                        imageUrl: [
-                          attachmentUrl1,
-                          attachmentUrl2,
-                          attachmentUrl3
-                        ][i],
-                        imageUrls: [
-                          attachmentUrl1,
-                          attachmentUrl2,
-                          attachmentUrl3
-                        ],
-                        index: i,
-                        onTap: (index) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ImageViewer(
-                                imageUrls: [
-                                  attachmentUrl1,
-                                  attachmentUrl2,
-                                  attachmentUrl3
-                                ],
-                                initialIndex: index,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 4)
-                    ],
-                  )
+              if (attachmentUrl1.isNotEmpty)
+                HoverableImage(imageUrl: attachmentUrl1)
+              else
+                const Text(
+                  'No attachment available.',
+                  style: TextStyle(color: Colors.grey),
+                ),
             ],
           ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         actions: [
           TextButton(
             onPressed: () {
@@ -1428,20 +1310,14 @@ void _modal(
               ),
             ),
             onPressed: () async {
-              if (status == 'Resolved') {
-                _confirmRevertModal(
-                  context,
-                  docID,
-                );
+              if (status == 'verified') {
+                _confirmRevertModal(context, docID);
               } else {
-                _confirmResolveModal(
-                  context,
-                  docID,
-                );
+                _confirmResolveModal(context, docID);
               }
             },
             child: Text(
-              status == 'Resolved' ? "Revert to Pending?" : "Resolve",
+              status == 'verified' ? "Revert to Non-Verified?" : "Verify",
               style: const TextStyle(
                 color: whiteColor,
                 fontWeight: FontWeight.w500,
@@ -1475,7 +1351,7 @@ void _confirmResolveModal(BuildContext context, String docID) async {
           ),
         ),
         content: const Text(
-          "Are you sure you want to resolve this ticket?",
+          "Are you sure you want to verify this user?",
           style: TextStyle(
             color: blackColor,
           ),
@@ -1518,14 +1394,14 @@ void _confirmResolveModal(BuildContext context, String docID) async {
   );
 
   if (confirmed) {
-    await _firestore.collection('Violation Ticket').doc(docID).update(
+    await _firestore.collection('User').doc(docID).update(
       {
-        'status': 'Resolved',
+        'status': 'verified',
       },
     );
     Navigator.of(context).pop();
     successSnackbar(
-        context, "Ticket Resolved!", MediaQuery.of(context).size.width * 0.9);
+        context, "Verified!", MediaQuery.of(context).size.width * 0.3);
   }
 }
 
@@ -1550,7 +1426,7 @@ void _confirmRevertModal(BuildContext context, String docID) async {
           ),
         ),
         content: const Text(
-          "Are you sure you want to revert this ticket to pending?",
+          "Are you sure you want to revert this user to non-verified?",
           style: TextStyle(
             color: blackColor,
           ),
@@ -1593,29 +1469,23 @@ void _confirmRevertModal(BuildContext context, String docID) async {
   );
 
   if (confirmed) {
-    await _firestore.collection('Violation Ticket').doc(docID).update(
+    await _firestore.collection('User').doc(docID).update(
       {
-        'status': 'Pending',
+        'status': 'non-verified',
       },
     );
     Navigator.of(context).pop();
-    successSnackbar(context, "Ticket Reverted to Pending!",
-        MediaQuery.of(context).size.width * 0.9);
+    successSnackbar(context, "User Reverted to Non-Verified!",
+        MediaQuery.of(context).size.width * 0.3);
   }
 }
 
 class HoverableImage extends StatefulWidget {
   final String imageUrl;
-  final List<String> imageUrls;
-  final int index;
-  final void Function(int) onTap;
 
   const HoverableImage({
     Key? key,
     required this.imageUrl,
-    required this.imageUrls,
-    required this.index,
-    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -1631,17 +1501,33 @@ class _HoverableImageState extends State<HoverableImage> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) {
+        setState(() {
+          _isHovered = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          _isHovered = false;
+        });
+      },
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => widget.onTap(widget.index),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImageViewer(imageUrl: widget.imageUrl),
+            ),
+          );
+        },
         child: AnimatedScale(
           scale: _isHovered ? 1.03 : 1.0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.fastOutSlowIn,
           child: Container(
-            height: MediaQuery.of(context).size.height * 0.15,
-            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.3,
+            width: MediaQuery.of(context).size.width * 0.3,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
@@ -1659,8 +1545,8 @@ class _HoverableImageState extends State<HoverableImage> {
                       highlightColor: Colors.grey[100]!,
                       child: Container(
                         color: Colors.white,
-                        height: MediaQuery.of(context).size.height * 0.15,
-                        width: MediaQuery.of(context).size.width * 0.9,
+                        height: MediaQuery.of(context).size.height * 0.3,
+                        width: MediaQuery.of(context).size.width * 0.3,
                       ),
                     ),
                   AnimatedOpacity(
@@ -1669,8 +1555,8 @@ class _HoverableImageState extends State<HoverableImage> {
                     child: Image.network(
                       widget.imageUrl,
                       fit: BoxFit.cover,
-                      height: MediaQuery.of(context).size.height * 0.15,
-                      width: MediaQuery.of(context).size.width * 0.9,
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.width * 0.3,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) {
                           Future.microtask(() {
@@ -1713,29 +1599,17 @@ class _HoverableImageState extends State<HoverableImage> {
 }
 
 class ImageViewer extends StatefulWidget {
-  final List<String> imageUrls;
-  final int initialIndex;
+  final String imageUrl;
 
-  const ImageViewer({
-    super.key,
-    required this.imageUrls,
-    this.initialIndex = 0,
-  });
+  const ImageViewer({required this.imageUrl, super.key});
 
   @override
-  _ImageViewerState createState() => _ImageViewerState();
+  State<ImageViewer> createState() => _ImageViewerState();
 }
 
 class _ImageViewerState extends State<ImageViewer> {
-  late int _currentIndex;
   bool _isLoading = true;
   bool _hasError = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1754,7 +1628,7 @@ class _ImageViewerState extends State<ImageViewer> {
                       size: 50,
                     ),
                   Image.network(
-                    widget.imageUrls[_currentIndex],
+                    widget.imageUrl,
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) {
@@ -1769,11 +1643,9 @@ class _ImageViewerState extends State<ImageViewer> {
                       }
                     },
                     errorBuilder: (context, error, stackTrace) {
-                      Future.microtask(() {
-                        setState(() {
-                          _hasError = true;
-                          _isLoading = false;
-                        });
+                      setState(() {
+                        _hasError = true;
+                        _isLoading = false;
                       });
                       return Center(
                         child: Text(
@@ -1783,49 +1655,14 @@ class _ImageViewerState extends State<ImageViewer> {
                       );
                     },
                   ),
+                  if (_hasError)
+                    Center(
+                      child: Text(
+                        'Failed to load image',
+                        style: TextStyle(color: whiteColor.withOpacity(0.5)),
+                      ),
+                    ),
                 ],
-              ),
-            ),
-          ),
-          Padding(
-            padding:
-                EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.01),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                hoverColor: whiteColor.withOpacity(0.2),
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: whiteColor,
-                ),
-                onPressed: _currentIndex > 0
-                    ? () {
-                        setState(() {
-                          _currentIndex--;
-                        });
-                      }
-                    : null,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(
-                right: MediaQuery.of(context).size.width * 0.01),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                hoverColor: whiteColor.withOpacity(0.2),
-                icon: const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: whiteColor,
-                ),
-                onPressed: _currentIndex < widget.imageUrls.length - 1
-                    ? () {
-                        setState(() {
-                          _currentIndex++;
-                        });
-                      }
-                    : null,
               ),
             ),
           ),
