@@ -189,10 +189,6 @@ class _UsersDesktopScreenState extends State<UsersDesktopScreen> {
           ),
         ),
         item['status'] ?? '',
-        (item['timestamp'] != null && item['timestamp'] is Timestamp)
-            ? DateFormat('dd MMM yyyy, HH:mm')
-                .format(item['timestamp'].toDate())
-            : 'N/A',
       ];
     }).toList();
 
@@ -298,11 +294,6 @@ class _UsersDesktopScreenState extends State<UsersDesktopScreen> {
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(5),
                     child: pw.Text('Status',
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text('Timestamp',
                         style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   ),
                 ],
