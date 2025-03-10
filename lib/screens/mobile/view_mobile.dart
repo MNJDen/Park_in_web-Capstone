@@ -17,6 +17,8 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
   final DatabaseReference _dbRef =
       FirebaseDatabase.instance.ref('parkingAreas');
   int totalParkingCount = 0;
+  int totalFourWheelCount = 0; // Total for 4-wheel parking
+  int totalTwoWheelCount = 0; // Total for 2-wheel parking
   bool _isLoading = true;
 
   late Timer _timer;
@@ -58,6 +60,50 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
     }
   }
 
+  void fetchAvailableParkingSpaces() {
+    final DatabaseReference dbRef =
+        FirebaseDatabase.instance.ref('parkingAreas');
+
+    List<String> fourWheels = [
+      'Alingal',
+      'Phelan',
+      'Alingal A',
+      'Alingal B',
+      'Burns',
+      'Coko Cafe',
+      'Covered Court',
+      'Library',
+    ];
+    List<String> twoWheels = ['Alingal (M)', 'Dolan (M)', 'Library (M)'];
+
+    dbRef.onValue.listen((DatabaseEvent event) {
+      //Explicitly use DatabaseEvent
+      int fourWheelSpaces = 0;
+      int twoWheelSpaces = 0;
+
+      if (event.snapshot.value != null) {
+        Map<String, dynamic> parkingData =
+            Map<String, dynamic>.from(event.snapshot.value as Map);
+
+        for (String area in fourWheels) {
+          fourWheelSpaces +=
+              (parkingData[area]?['count'] as num?)?.toInt() ?? 0;
+        }
+        for (String area in twoWheels) {
+          twoWheelSpaces += (parkingData[area]?['count'] as num?)?.toInt() ?? 0;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          totalFourWheelCount = fourWheelSpaces;
+          totalTwoWheelCount = twoWheelSpaces;
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,11 +113,13 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
         now = DateTime.now();
       });
     });
+    fetchAvailableParkingSpaces();
   }
 
   // Listen to real-time updates from Firebase
   void _listenToParkingUpdates() {
     _dbRef.onValue.listen((DatabaseEvent event) {
+      //Explicitly use DatabaseEvent
       DataSnapshot snapshot = event.snapshot;
       int total = 0;
 
@@ -79,8 +127,7 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
         Map<String, dynamic> parkingAreas =
             Map<String, dynamic>.from(snapshot.value as Map);
         parkingAreas.forEach((key, value) {
-          num count = value['count'] ?? 0;
-          total += count.toInt();
+          total += (value['count'] as num?)?.toInt() ?? 0;
         });
 
         if (mounted) {
@@ -249,6 +296,26 @@ class _ViewDesktopScreenState extends State<ViewMobileScreen> {
                         fontStyle: FontStyle.italic,
                       ),
                     ).animate().fade(delay: const Duration(milliseconds: 200)),
+                    Text(
+                      "Four Wheels: ${totalFourWheelCount == 0 ? 'FULL' : totalFourWheelCount}",
+                      style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                        color: totalFourWheelCount == 0
+                            ? parkingRedColor
+                            : blackColor,
+                      ),
+                    ).animate().fade(delay: const Duration(milliseconds: 100)),
+                    Text(
+                      "Two Wheels: ${totalTwoWheelCount == 0 ? 'FULL' : totalTwoWheelCount}",
+                      style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                        color: totalTwoWheelCount == 0
+                            ? parkingRedColor
+                            : blackColor,
+                      ),
+                    ).animate().fade(delay: const Duration(milliseconds: 100)),
                   ],
                 ),
                 Positioned(
